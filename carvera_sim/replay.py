@@ -2,6 +2,7 @@
 import bisect
 import numpy as np
 from .gcode import Move
+from .chunkmesh import cutting_bounds
 
 
 class Replay:
@@ -24,13 +25,16 @@ class Replay:
     def seek(self,seconds,cancelled=None):
         seconds=min(self.program.duration,max(0.,float(seconds)))
         complete=bisect.bisect_right(self.ends,seconds)
-        if self.current<0 or seconds<self.current:
+        reset=self.current<0 or seconds<self.current
+        dirty=[]
+        if reset:
             self.done=self.snapshots.restore(complete,self.sim.grid,self.sim.stock)
             self.fraction=0.
         while self.done<complete:
             if cancelled and cancelled():raise InterruptedError()
             m=self.program.moves[self.done]
-            self.sim.apply(self.part(m,self.fraction,1.) if self.fraction else m,check=False)
+            partial=self.part(m,self.fraction,1.) if self.fraction else m
+            if self.sim.apply(partial,check=False):dirty.append(cutting_bounds(partial,self.sim.tools[m.tool]))
             self.done+=1
             self.fraction=0.
         if self.done<len(self.program.moves):
@@ -38,7 +42,8 @@ class Replay:
             fraction=(seconds-m.t0)/(m.t1-m.t0) if m.t1>m.t0 else 0.
             fraction=max(0.,min(1.,fraction))
             if fraction>self.fraction:
-                self.sim.apply(self.part(m,self.fraction,fraction),check=False)
+                partial=self.part(m,self.fraction,fraction)
+                if self.sim.apply(partial,check=False):dirty.append(cutting_bounds(partial,self.sim.tools[m.tool]))
             self.fraction=fraction
             tip=m.start+(m.end-m.start)*fraction
         else:
@@ -46,4 +51,4 @@ class Replay:
             tip=m.end.copy()
         self.current=seconds
         return {"time_s":seconds,"tip":tip,"tool":m.tool,"line":m.line,"rpm":m.rpm,
-                "spindle":m.spindle,"rapid":m.rapid}
+                "spindle":m.spindle,"rapid":m.rapid,"dirty_bounds":dirty,"reset_stock":reset}
