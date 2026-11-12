@@ -1,22 +1,24 @@
 # Carvera voxel simulator — engineering handover
 
-**Snapshot:** 12 November 2026 · **package:** `carvera-voxel-sim` 0.2.1 · **runtime:** standard, GIL-enabled, 64-bit CPython 3.14.
+**Snapshot:** 12 November 2026 · **package:** `carvera-voxel-sim` 0.2.2 · **runtime:** standard, GIL-enabled, 64-bit CPython 3.14.
 
-This document describes the delivered implementation, its design rationale, the evidence collected, and the work that remains. It is intended to let another agent continue without the original conversation. Source references and function names refer to the 0.2.1 repository/archive identified below. Decisions are implementation choices, not claims that the model reproduces every behavior of a real controller.
+This document describes the delivered implementation, its design rationale, the evidence collected, and the work that remains. It is intended to let another agent continue without the original conversation. Source references and function names refer to the 0.2.2 repository/archive identified below. Decisions are implementation choices, not claims that the model reproduces every behavior of a real controller.
 
 ## 1. Start here
 
 The simulator accepts three-axis NC and rectangular stock, removes material from a true 3D voxel array, checks configured collisions, saves final stock plus dynamic diagnostics, and opens an optional native Qt/OpenGL playback window. Python remains **standard x64 CPython 3.14**.
 
-The latest requested work is implemented in **0.2.0**: local Git with incremental commits; excavation rate (mm³/min); positive stock-normal approach speed (mm/min) within 20 mm; both metrics in the result NPY and linked charts above the timeline; incremental full-resolution rendering; and this updated handover.
+The metrics and rendering work was implemented in **0.2.0**: local Git with incremental commits; material removal rate (MRR, mm³/min); stock approach speed (positive normal component, mm/min) within 20 mm; both metrics in the result NPY and linked charts above the timeline; incremental full-resolution rendering; and this updated handover.
 
 **97 tests passed** on Linux/Python 3.14.10. Native desktop playback measured **31.21 FPS** on an 800 × 600 × 120 grid (57.6 million 0.1 mm voxels) at 10× playback using Mesa llvmpipe software OpenGL. This excludes verification, initial meshing and arbitrary seeks. The reproducible headless raster benchmark, including metrics and collisions, took **2.92 s** for a nominal **1,941.80 s** job.
 
 Native Windows execution and physical setup acceptance remain unfinished. The default is nominal, unverified **Carvera Air** geometry. The 124-tool catalog is not an exhaustive proprietary Makera Studio database export. Preserve these distinctions.
 
-**Latest patch, 0.2.1:** fixed the toolpath being overwritten by the stock. `GLLinePlotItem` uses additive blending with depth testing disabled; drawing it before stock meant later opaque stock painting erased it. The path now explicitly uses `glOptions="additive"` and `setDepthValue(100)`, so it draws after stock, fixtures and tool/head meshes even when they are replaced on seek or tool change. `depthValue` controls draw order, not geometric Z. The path is intentionally an inspection overlay, including segments inside or behind stock. No toolpath coordinate offset, stock transparency change, simulation/kernel or NPY schema change was made.
+**Latest patch, 0.2.2:** standardized the chart titles and code/documentation terminology as **Material removal rate** (MRR, mm³/min) and **Stock approach speed** (mm/min). Chart tooltips explain interval averaging, the positive voxel-face-normal component, the 20 mm probe cutoff and start/mid/end peak sampling. `METRIC_LABELS` supplies the shared display names; the calculation is named `stock_approach_speed()`, with `normal_approach` retained as an alias for existing callers. NPY fields `removal_rate_mm3_min` and `approach_speed_mm_min`, JSON keys, units, row layout and numerical calculations remain compatible with 0.2.0/0.2.1. JSON definition strings use the new terminology. No performance benchmark was repeated for this naming-only patch. The full 97-test suite passed in 9.142 s (`validation/tests_metric_names.xml`); offscreen chart titles/tooltips and layout were checked, and the 0.2.0 example metrics still load without conversion.
 
-Native Linux/Python 3.14 verification reproduced the old rendering by temporarily switching the item's draw order, then checked the fix during playback, orbit and stop/rewind. The comparison control was temporary test code and is not shipped. The complete 97-test suite passed again in 15.056 s. The 31.21 FPS figure below is the **0.2.0 benchmark**, not a new 0.2.1 measurement.
+**Previous patch, 0.2.1:** fixed the toolpath being overwritten by the stock. `GLLinePlotItem` uses additive blending with depth testing disabled; drawing it before stock meant later opaque stock painting erased it. The path now explicitly uses `glOptions="additive"` and `setDepthValue(100)`, so it draws after stock, fixtures and tool/head meshes even when they are replaced on seek or tool change. `depthValue` controls draw order, not geometric Z. The path is intentionally an inspection overlay, including segments inside or behind stock. No toolpath coordinate offset, stock transparency change, simulation/kernel or NPY schema change was made.
+
+Native Linux/Python 3.14 verification reproduced the old rendering by temporarily switching the item's draw order, then checked the fix during playback, orbit and stop/rewind. The comparison control was temporary test code and is not shipped. The complete 97-test suite passed again in 15.056 s. The 31.21 FPS figure below is the **0.2.0 benchmark**, not a new 0.2.1 or 0.2.2 measurement.
 
 ### Delivered source and repository
 
@@ -24,7 +26,7 @@ Native Linux/Python 3.14 verification reproduced the old rendering by temporaril
 
 | Property | Current value |
 |---|---|
-| Package / runtime | `0.2.1`; `>=3.14,<3.15` |
+| Package / runtime | `0.2.2`; `>=3.14,<3.15` |
 | Archive top-level folder | `carvera-voxel-sim/` |
 | Git | Local repository, branch `main`, no external remote; `.git` included in source ZIP |
 | Handover | `HANDOVER.md` in the repository; identical standalone `CARVERA_SIM_HANDOVER.md` |
@@ -41,7 +43,8 @@ Git history is the authoritative change record. Run `git status --short` and `gi
 | `321d798` | Linked charts and incremental desktop playback |
 | `84291a3` | Single-draw stock batching, layout fixes and native benchmark script |
 | `d7fd374` | Version 0.2.0, final regression/evidence, refreshed example and documentation |
-| Following patch commit | Version 0.2.1, final toolpath-overlay draw order, refreshed tests and handover; obtain hash with `git log` |
+| `69786e7` | Version 0.2.1, final toolpath-overlay draw order, refreshed tests and handover |
+| Following patch commit | Version 0.2.2, metric terminology, chart tooltips and compatibility; obtain hash with `git log` |
 
 The import came from the previous 79,991-byte 0.1.1 ZIP, SHA-256 `045690f5fb56510ddcb94469d7e79831c3476b75853232d3955a545afd7a677f`. That checksum describes the **old import only**, not this ZIP. Do not put a self-referential current archive hash inside a document included in that archive.
 
@@ -143,7 +146,7 @@ flowchart TD
 | `carvera_sim/kernels.py` | Continuous sweep/removal/contact routines and numeric interval/quadratic helpers. |
 | `carvera_sim/engine.py` | `Stock`, `Machine`, `Simulator`, `SimulationReport`, `SnapshotCache`, `save_result()`, `load_metrics()`, `load_result()`, `warmup()`: simulation, sampled metrics, collisions, checkpoints and two-array export. |
 | `carvera_sim/replay.py` | `Replay.seek()`, `Replay.part()`: GUI-independent, fractional, bidirectional replay. |
-| `carvera_sim/metrics.py` | `METRIC_DTYPE`, `sample_count()`, `normal_approach()`, `has_stock_ahead()`, `metric_summary()`: sample schema and six-direction stock approach queries. |
+| `carvera_sim/metrics.py` | `METRIC_DTYPE`, `sample_count()`, `stock_approach_speed()`, `has_stock_ahead()`, `metric_summary()`: sample schema and six-direction stock approach queries. |
 | `carvera_sim/chunkmesh.py` | `ChunkMesher`, `mesh_chunk()`, `chunk_mesh_kernel()`, `cutting_bounds()`: dirty chunks, seam ownership, cached surfaces and single-draw packing. |
 | `carvera_sim/charts.py` | `MetricsCharts`: two linked plots, cursor/time synchronization, click and drag seek signals. |
 | `carvera_sim/mesh.py` | `stock_mesh()`, `greedy_mesh()`, `pooled()`, `frusta_mesh()`, `boxes_mesh()`: rendering geometry only. |
@@ -301,15 +304,15 @@ A failed new run can leave an older completed output at the requested path. Agen
 | `t_start_s`, `t_end_s` | `<f8` each | Nominal interval start/end, seconds |
 | `line`, `tool` | `<i8` each | Source NC line and T number |
 | `removed_mm3` | `<f8` | Actually cleared voxel count × pitch³ |
-| `removal_rate_mm3_min` | `<f8` | `removed_mm3 * 60 / duration_s` |
-| `approach_speed_mm_min` | `<f8` | Maximum sampled positive stock-normal approach |
+| `removal_rate_mm3_min` | `<f8` | Material removal rate (MRR): `removed_mm3 * 60 / duration_s` |
+| `approach_speed_mm_min` | `<f8` | Stock approach speed: maximum sampled positive stock-normal component |
 | `rapid` | `?` | G0 flag |
 
 For each parsed `Move`, `sample_count()` takes the maximum of 1, ceiling(duration / period), and ceiling(length / distance), with a small floating-point ceiling guard. All intervals remain continuous analytic sweeps, not point stamps. Default bounds are 0.1 s and 1 mm; each move keeps its source line, tool, spindle state and exact nominal timing. `Simulator.run()` preallocates the table and checks the sample-count cap before allocating it. Two million rows use 114,000,000 bytes (~108.72 MiB), separately from stock and mesh/checkpoint storage.
 
-For an interval, velocity is the source segment delta × 60 / source duration. `normal_approach()` tests moving axes in descending absolute velocity order, stopping at the first with stock ahead. It sweeps the actual cutting frusta along that signed face-normal direction by 20 mm, with half a voxel of axial allowance to account for the front voxel face. Other coordinates remain unchanged. The transverse cutter projection is centre-sampled, matching the solid representation. The metric is the corresponding positive component magnitude; if no moving axis has stock ahead within the range, it is zero.
+For an interval, velocity is the source segment delta × 60 / source duration. `stock_approach_speed()` tests moving axes in descending absolute velocity order, stopping at the first with stock ahead. It sweeps the actual cutting frusta along that signed face-normal direction by 20 mm, with half a voxel of axial allowance to account for the front voxel face. Other coordinates remain unchanged. The transverse cutter projection is centre-sampled, matching the solid representation. The metric is the corresponding positive component magnitude; if no moving axis has stock ahead within the range, it is zero.
 
-The interval value is the maximum of probes at start, midpoint and end against **remaining stock before that interval is cut**. Then `Simulator.apply(part)` checks collisions and removes material, returning the newly cleared voxel count. This order sees an impending approach before the interval excavates the target. Collision duplicate suppression remains in the existing engine. Checkpoints are still indexed by original parsed moves, not metric subintervals.
+The interval value is the maximum of probes at start, midpoint and end against **remaining stock before that interval is cut**. Then `Simulator.apply(part)` checks collisions and removes material, returning the newly cleared voxel count. This order sees an impending approach before the interval removes the target material. Collision duplicate suppression remains in the existing engine. Checkpoints are still indexed by original parsed moves, not metric subintervals.
 
 Examples: a flat-stock diagonal velocity `(300, 0, -100)` above its top gives 100 mm/min if the top is in range. Pure horizontal travel above the top gives zero. Moving upward into an undercut roof can be positive. A deep pocket floor is measured at its actual remaining level, not original Z=0. Tangential/retreating motion is zero when no other stock is encountered in the query direction.
 
@@ -327,8 +330,8 @@ Read the two metrics separately:
 ```python
 from carvera_sim.engine import load_result
 stock, metrics = load_result('result.npy')
-rate = metrics['removal_rate_mm3_min']
-approach = metrics['approach_speed_mm_min']
+material_removal_rate = metrics['removal_rate_mm3_min']
+stock_approach_speed = metrics['approach_speed_mm_min']
 interval_start = metrics['t_start_s']
 ```
 
@@ -885,4 +888,4 @@ The Makera numerical data are pinned. The unversioned documentation links can ch
 
 ## 17. Continuation brief
 
-Continue from **0.2.1**, standard x64 **Python 3.14**, local branch **main**. Preserve continuous full-XYZ removal, collision-before-cut chronology, strict unsupported-NC rejection and explicit incomplete geometry. Dynamic diagnostics are sampled interval mean removal and peak voxel-face approach within 20 mm; both reside in the same NPY after the backward-compatible bool grid. Default full-resolution playback remeshes dirty chunks and batches cached surfaces into one GPU draw. Keep the toolpath in the final overlay draw order so added/replaced meshes cannot cover it. The new 97-test suite, native ~31 FPS benchmark, and exact demo-grid regression are the current evidence. Native Windows acceptance and measured Carvera Air geometry remain the highest-value unfinished work. Make further changes in reviewable Git commits and keep this handover and validation facts current.
+Continue from **0.2.2**, standard x64 **Python 3.14**, local branch **main**. Preserve continuous full-XYZ removal, collision-before-cut chronology, strict unsupported-NC rejection and explicit incomplete geometry. Dynamic diagnostics are material removal rate (sampled interval mean) and stock approach speed (sampled peak voxel-face-normal component within 20 mm); both reside in the same NPY after the backward-compatible bool grid. Default full-resolution playback remeshes dirty chunks and batches cached surfaces into one GPU draw. Keep the toolpath in the final overlay draw order so added/replaced meshes cannot cover it. The new 97-test suite, native ~31 FPS benchmark, and exact demo-grid regression are the current evidence. Native Windows acceptance and measured Carvera Air geometry remain the highest-value unfinished work. Make further changes in reviewable Git commits and keep this handover and validation facts current.

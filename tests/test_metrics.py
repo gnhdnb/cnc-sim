@@ -1,7 +1,7 @@
 import json
 import numpy as np
 import pytest
-from carvera_sim.metrics import normal_approach, METRIC_DTYPE
+from carvera_sim.metrics import stock_approach_speed, METRIC_DTYPE
 from carvera_sim.engine import Stock,Machine,Simulator,save_result,load_metrics,load_result
 from carvera_sim.gcode import Parser
 from carvera_sim.tools import make_tool
@@ -13,7 +13,7 @@ def cutter():
 
 
 def approach(grid,stock,pos,vel):
-    return normal_approach(grid,stock.origin,stock.pitch,cutter().cutting,
+    return stock_approach_speed(grid,stock.origin,stock.pitch,cutter().cutting,
                            np.array(pos,dtype=float),np.array(vel,dtype=float))
 
 

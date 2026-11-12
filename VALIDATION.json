@@ -1,6 +1,6 @@
 {
   "date": "2026-11-12",
-  "package_version": "0.2.1",
+  "package_version": "0.2.2",
   "python": "3.14.10",
   "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
   "automated_tests": {
@@ -8,9 +8,9 @@
     "failed": 0,
     "errors": 0,
     "skipped": 0,
-    "duration_s": 15.056,
-    "command": "python -m pytest -q",
-    "junit_file": "validation/tests_depth_fix.xml"
+    "duration_s": 9.142,
+    "command": "python -m pytest -q --junitxml=validation/tests_metric_names.xml",
+    "junit_file": "validation/tests_metric_names.xml"
   },
   "dependencies": {
     "numpy": "2.3.5",
@@ -133,8 +133,9 @@
     "chunk_meshing_commit": "c44ac3d",
     "charts_playback_commit": "321d798",
     "batch_rendering_commit": "84291a3",
-    "note": "Toolpath-overlay fix follows the 0.2.0 release; use git log for the latest patch hash.",
-    "feature_release_commit": "d7fd374"
+    "note": "Metric terminology patch follows 0.2.1; use git log for the latest patch hash.",
+    "feature_release_commit": "d7fd374",
+    "toolpath_overlay_commit": "69786e7"
   },
   "makera_source_commit": "de08a657bdc9c230a094dbdba792acd70bfcdf32",
   "historical_validation": "validation/history_0_1_1.json",
@@ -152,6 +153,30 @@
       "head visibility toggle remains functional"
     ],
     "numeric_engine_changed": false,
+    "output_schema_changed": false,
+    "performance_rebenchmarked": false
+  },
+  "metric_terminology": {
+    "package_version": "0.2.2",
+    "labels": [
+      "Material removal rate",
+      "Stock approach speed"
+    ],
+    "code_function": "stock_approach_speed",
+    "legacy_function_alias": "normal_approach",
+    "serialized_fields_unchanged": [
+      "removal_rate_mm3_min",
+      "approach_speed_mm_min"
+    ],
+    "checked": [
+      "full 97-test suite",
+      "offscreen chart titles and tooltips",
+      "chart layout inspected at 1000 x 220 pixels",
+      "legacy function alias preserved",
+      "dtype equal to 0.2.1",
+      "0.2.0 example metrics loaded without conversion"
+    ],
+    "numeric_calculation_changed": false,
     "output_schema_changed": false,
     "performance_rebenchmarked": false
   }

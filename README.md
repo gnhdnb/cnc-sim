@@ -30,7 +30,7 @@ Numba compiles and caches the numeric kernels on the first invocation, so that
 invocation has additional startup cost. A working OpenGL desktop driver is
 needed for the viewer.
 
-Version **0.2.1** targets Python 3.14. All **97 tests** passed on Linux with
+Version **0.2.2** targets Python 3.14. All **97 tests** passed on Linux with
 Python 3.14.10, including metric, meshing and Qt widget regressions. Native
 Python 3.14 desktop playback and chart/mouse controls were exercised. The
 80 × 60 × 12 mm benchmark in 0.2.0 achieved about **31 FPS at 0.1 mm display pitch**
@@ -150,11 +150,11 @@ peaks when reducing points to screen pixels; the saved samples are unchanged.
 | `t_start_s`, `t_end_s` | Nominal interval start/end in seconds |
 | `line`, `tool` | NC line and T number |
 | `removed_mm3` | Material actually removed in this interval |
-| `removal_rate_mm3_min` | Removed voxel volume × 60 / interval seconds |
-| `approach_speed_mm_min` | Largest positive velocity component toward a remaining-stock voxel face within 20 mm of the rotating cutter envelope |
+| `removal_rate_mm3_min` | Material removal rate (MRR): removed voxel volume × 60 / interval seconds |
+| `approach_speed_mm_min` | Stock approach speed: largest positive velocity component toward a remaining-stock voxel face within 20 mm of the rotating cutter envelope |
 | `rapid` | Whether this is a G0 interval |
 
-Approach is zero for tangential/retreating motion when no stock lies ahead
+Stock approach speed is zero for tangential/retreating motion when no stock lies ahead
 along a moving axis within 20 mm. A diagonal move over a horizontal surface
 reports its downward component, not its total feed. Pockets and undercut
 ceilings use the remaining three-dimensional stock. The normal is a **voxel
@@ -162,9 +162,9 @@ face normal**, not a fitted smooth-surface normal; staircase effects remain on
 curved/sloping surfaces. Fixtures and holder/head geometry have separate
 collision checks and are not included in this metric.
 
-Each motion is split into intervals of at most **0.1 s and 1 mm**. Approach is
+Each motion is split into intervals of at most **0.1 s and 1 mm**. Stock approach speed is
 the maximum of start/mid/end probes against stock before that interval is cut;
-removal rate is the interval mean. These are diagnostic samples, not a bounded
+material removal rate is the interval mean. These are diagnostic samples, not a bounded
 continuous peak detector. An interval crossing the 20 mm threshold can carry
 a nonzero peak even though its start was farther away. Use smaller sampling
 limits when inspecting a short transient:
@@ -175,7 +175,7 @@ limits when inspecting a short transient:
 
 The default `--max-metric-samples` guard is 2,000,000 (57 bytes per row).
 Zero-duration material removal retains `removed_mm3` and has a `NaN` rate;
-the JSON counts these undefined samples. A rapid never excavates material.
+the JSON counts these undefined samples. A rapid never removes material.
 The rates use programmed constant segment velocity, without acceleration,
 backlash, deflection or material-force simulation. They expose potentially
 hazardous commands; no material-specific danger threshold is inferred.
@@ -184,8 +184,8 @@ hazardous commands; no material-specific danger threshold is inferred.
 from carvera_sim.engine import load_result, load_metrics
 
 stock, metrics = load_result("result.npy")  # stock is memory-mapped by default
-rate = metrics["removal_rate_mm3_min"]
-approach = metrics["approach_speed_mm_min"]
+material_removal_rate = metrics["removal_rate_mm3_min"]
+stock_approach_speed = metrics["approach_speed_mm_min"]
 times = metrics["t_start_s"]
 # Or load only metrics without reading the voxel payload:
 metrics = load_metrics("result.npy")
@@ -195,6 +195,9 @@ Without this package, open the file once and call `np.load(stream,
 allow_pickle=False)` twice: first stock, then metrics. `load_metrics()` returns
 an empty typed table for legacy stock-only files. The schema-v2 JSON report
 documents sampling, units, peaks, array offset and separate raw-array hashes.
+Version 0.2.2 standardizes the UI and code terminology while retaining these
+serialized field names, units and calculations for compatibility with existing
+results and analysis scripts.
 
 ## Tools
 
@@ -360,7 +363,8 @@ those files are saved, playback becomes available:
 
 - Start, pause, stop/rewind, 0.1×–250× speed.
 - Click/drag timeline or enter an exact nominal time; seek in either direction.
-- Excavation and approach charts with synchronized cursors and click/drag seeking.
+- Material removal rate and Stock approach speed charts with synchronized cursors
+  and click/drag seeking. Hover over a chart title for its definition and sampling rules.
 - Collision list entries seek to the first recorded contact.
 - Left drag rotates; right/middle drag or Shift+left drag pans; wheel zooms.
 - Space toggles play/pause, Home stops/rewinds, Ctrl+Q closes.

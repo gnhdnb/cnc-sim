@@ -2,7 +2,7 @@
 import numpy as np
 from PySide6 import QtCore
 import pyqtgraph as pg
-from .metrics import METRIC_DTYPE
+from .metrics import METRIC_DTYPE, METRIC_LABELS
 
 
 class MetricsCharts(pg.GraphicsLayoutWidget):
@@ -17,10 +17,20 @@ class MetricsCharts(pg.GraphicsLayoutWidget):
         self.duration=0.
         self.plots=[];self.curves=[];self.cursor_lines=[]
         self.fields=('removal_rate_mm3_min','approach_speed_mm_min')
-        self.labels=('Excavation','Approach ≤20 mm')
+        self.labels=tuple(METRIC_LABELS[field] for field in self.fields)
         self.units=('mm³/min','mm/min')
+        self.tooltips=(
+            'Material removal rate (MRR), in mm³/min: material removed per minute, '
+            'averaged over each sampled interval.',
+            'Stock approach speed, in mm/min: the largest positive velocity component '
+            'normal to a remaining-stock voxel face. Each probe is zero when no stock '
+            'lies ahead within 20 mm of the cutter envelope. The chart shows the maximum '
+            'of interval start/midpoint/end probes before that interval is cut.',
+        )
         for i,(label,unit,color) in enumerate(zip(self.labels,self.units,('#64c7ff','#ffa766'))):
             plot=self.addPlot(row=i,col=0)
+            plot.setToolTip(self.tooltips[i])
+            plot.titleLabel.setToolTip(self.tooltips[i])
             plot.setLabel('left',units=unit)
             plot.getAxis('left').enableAutoSIPrefix(False)
             plot.getAxis('left').setWidth(90)

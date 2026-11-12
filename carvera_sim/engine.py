@@ -15,7 +15,7 @@ from .gcode import Program, Move
 from .tools import Body, Tool, make_body, EMPTY_FRUSTA
 from .kernels import (remove_sweep, collide_frusta, collide_boxes,
                       frustum_fixture_hit, box_fixture_hit)
-from .metrics import METRIC_DTYPE, normal_approach, sample_count, metric_summary
+from .metrics import METRIC_DTYPE, stock_approach_speed, sample_count, metric_summary
 
 
 class SimulationReport(dict):
@@ -255,15 +255,16 @@ class Simulator:
                 part=Move(move.start+lo*delta,move.start+hi*delta,move.tool,move.spindle,
                           move.rpm,move.rapid,move.line,move.t0+lo*dt,move.t0+hi*dt,move.kind)
                 rows=self.tools[move.tool].cutting
-                approach=0.
+                approach_speed=0.
                 if dt>0 and np.any(delta):
                     for point in (part.start,(part.start+part.end)/2,part.end):
-                        approach=max(approach,float(normal_approach(self.grid,self.stock.origin,
+                        approach_speed=max(approach_speed,float(stock_approach_speed(self.grid,self.stock.origin,
                                      self.stock.pitch,rows,point,velocity)))
                 removed=self.apply(part)*self.stock.pitch**3
                 duration=part.t1-part.t0
-                rate=removed*60/duration if duration>0 else (math.nan if removed else 0.)
-                self.metrics[sample]=(part.t0,part.t1,move.line,move.tool,removed,rate,approach,move.rapid)
+                material_removal_rate=removed*60/duration if duration>0 else (math.nan if removed else 0.)
+                self.metrics[sample]=(part.t0,part.t1,move.line,move.tool,removed,
+                                      material_removal_rate,approach_speed,move.rapid)
                 sample+=1
             if snapshots is not None:snapshots.add(i+1,self.grid)
             now=time.perf_counter()
@@ -430,4 +431,4 @@ def warmup():
     collide_boxes(grid,origin,.1,boxes,rows,a,b)
     frustum_fixture_hit(rows[0],boxes[0],a,b)
     box_fixture_hit(boxes[0],boxes[0],a,b)
-    normal_approach(grid,origin,.1,rows,a,np.array([0.,0.,-100.]))
+    stock_approach_speed(grid,origin,.1,rows,a,np.array([0.,0.,-100.]))
