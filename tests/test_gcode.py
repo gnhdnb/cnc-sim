@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from carvera_sim.gcode import Parser,NCError
+from cnc_sim.gcode import Parser,NCError
 
 
 def test_modal_units_offsets_incremental_and_local_rapid_feed():

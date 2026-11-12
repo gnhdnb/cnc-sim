@@ -225,7 +225,7 @@ class Parser:
                 raise NCError(lineno, "Conflicting spindle commands")
             if 20 in gs:
                 scale = 25.4
-                warnings.append(f"Line {lineno}: G20 converted to mm; community firmware documents inch-mode problems")
+                warnings.append(f"Line {lineno}: G20 converted to mm; controller-specific inch-mode behavior is not modeled")
             if 21 in gs: scale = 1.
             if 90 in gs: absolute = True
             if 91 in gs: absolute = False
@@ -296,9 +296,9 @@ class Parser:
                 continue
             if 28 in gs:
                 if words or len(gs) != 1 or ms:
-                    raise NCError(lineno, "Carvera G28 accepts no inferred intermediate or axis behavior here")
+                    raise NCError(lineno, "G28 accepts only a standalone configured waypoint sequence; intermediate or axis behavior is not inferred")
                 if not self.clearance_moves:
-                    raise NCError(lineno, "G28 needs explicit clearance_moves in --machine (Carvera G28 is clearance, not generic homing)")
+                    raise NCError(lineno, "G28 needs explicit clearance_moves in --machine; controller-specific homing or clearance behavior is not inferred")
                 for waypoint in self.clearance_moves:
                     p = pos.copy()
                     for d,c in enumerate("xyz"):

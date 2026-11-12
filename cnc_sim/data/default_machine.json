@@ -1,0 +1,85 @@
+{
+  "name": "Carvera Air — nominal envelopes from Makera simplified CAD",
+  "verified": false,
+  "source": "https://github.com/MakeraInc/CarveraProfiles/blob/de08a657bdc9c230a094dbdba792acd70bfcdf32/Machine_Design_Files/Carvera_Air_Simplified.step",
+  "source_commit": "de08a657bdc9c230a094dbdba792acd70bfcdf32",
+  "notes": "Extracted from Z component of official simplified STEP on 2026-11-11. Cylinders are exact CAD radii; motor and Z plate use conservative bounding boxes. This is not metrology-grade CAD. Confirm actual nose, collar, accessories, stickout, orientation and operating offsets before setting verified=true. Does not model the X gantry, probe, dust shoe, hoses, wiring or machine frame.",
+  "coordinate_derivation": "CAD local spindle center x=-74.0385852576533, z=28.999999999998; lower nose y=201.458967162417. Simulator X=CAD x+74.0385852576533, Y=29-CAD z, Z=CAD y-201.458967162417. Gauge is lower nose face, tip+stickout.",
+  "tool_change_restores_tip": false,
+  "bodies": [
+    {
+      "name": "holder_nose",
+      "role": "holder",
+      "shape": "cylinder",
+      "anchor": "gauge",
+      "z": [
+        0,
+        20
+      ],
+      "radius": 8
+    },
+    {
+      "name": "spindle_nose",
+      "role": "spindle",
+      "shape": "cylinder",
+      "anchor": "gauge",
+      "z": [
+        20,
+        25
+      ],
+      "radius": 16.7899370932549
+    },
+    {
+      "name": "spindle_motor_envelope",
+      "role": "spindle",
+      "shape": "box",
+      "anchor": "gauge",
+      "min": [
+        -31.001,
+        -44,
+        25
+      ],
+      "max": [
+        30.65,
+        29,
+        196.21
+      ]
+    },
+    {
+      "name": "head_plate_envelope",
+      "role": "head",
+      "shape": "box",
+      "anchor": "gauge",
+      "min": [
+        -60,
+        29,
+        26.779
+      ],
+      "max": [
+        59.6,
+        41,
+        199.28
+      ]
+    }
+  ],
+  "fixtures": [],
+  "provenance": {
+    "tool_catalog": "https://github.com/MakeraInc/CarveraProfiles",
+    "tool_profile_directory": "CAM_Post_Processors/Fusion360-profiles/Tool Files/",
+    "sample_nc": "https://github.com/MakeraInc/CarveraProfiles/blob/de08a657bdc9c230a094dbdba792acd70bfcdf32/Sample_Files/TopClamp.nc",
+    "controller_gcodes": "https://carvera-community.gitbook.io/docs/firmware/supported-commands/gcodes",
+    "controller_mcodes": "https://carvera-community.gitbook.io/docs/firmware/supported-commands/mcodes",
+    "tool_name_aliases": {
+      "Carvera M1 Threadmill": "b6b4ee77-048f-441c-8e1a-bd0426859c6a",
+      "Carvera M2 Threadmill": "9d3e618a-9e30-4725-b6af-81a8644092a0",
+      "Carvera M2.5 Threadmill": "bf1123dc-efce-4fc8-a24a-6ad10ca73b17",
+      "Carvera M3 Threadmill": "a818cbe7-79b8-4a3c-a1b7-54cfeff14ab7",
+      "Carvera M4 Threadmill": "4513185b-9b30-4d04-be3e-e5352e2a4263",
+      "Carvera M5 Threadmill": "2e8246db-4f63-45a2-acf9-bf601f1289b7",
+      "Carvera M6 Threadmill": "8390975a-7cca-469b-a272-b5d3ca49981c",
+      "Carvera M8 Threadmill": "29f36a53-0dbb-4763-9e1d-c393e86ccffa"
+    },
+    "controller_notes": "This nominal Carvera Air profile does not define a G28 clearance path; supply measured clearance_moves. Its controller documentation describes G28 as clearance positioning and warns about inch-mode compatibility. No generic homing path is inferred.",
+    "compatibility_notes": "This is not a Carvera C1 profile and is not a universal machine model."
+  }
+}

@@ -15,4 +15,4 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m pip install ".[test,viewer]"
       - run: python -m pytest -q
-      - run: python -c "from carvera_sim.viewer import Window; print('Qt/OpenGL imports OK')"
+      - run: python -c "from cnc_sim.viewer import Window; print('Qt/OpenGL imports OK')"

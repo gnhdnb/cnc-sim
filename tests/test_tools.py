@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from carvera_sim.tools import make_tool,embedded_tools,make_body
-from carvera_sim.catalog import catalog
+from cnc_sim.tools import make_tool,embedded_tools,make_body
+from cnc_sim.catalog import catalog
 
 
 def test_all_124_official_catalog_entries_construct():
@@ -10,6 +10,19 @@ def test_all_124_official_catalog_entries_construct():
         t=make_tool(i+1,{'catalog_id':record['id']})
         assert len(t.cutting)>0 and np.isfinite(t.cutting).all()
         assert not t.verified
+
+
+def test_catalog_display_name_aliases_keep_ids_and_geometry():
+    import json
+    from importlib.resources import files
+    defaults=json.loads(files('cnc_sim').joinpath('data/default_machine.json').read_text(encoding='utf-8'))
+    aliases=defaults['provenance']['tool_name_aliases']
+    assert aliases
+    for old_name,identifier in aliases.items():
+        current=make_tool(1,{'catalog_id':identifier})
+        previous=make_tool(1,{'catalog_id':old_name})
+        assert previous.spec==current.spec
+        np.testing.assert_array_equal(previous.cutting,current.cutting)
 
 
 @pytest.mark.parametrize('kind,extra',[

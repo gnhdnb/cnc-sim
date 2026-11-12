@@ -58,7 +58,7 @@ class Stock:
 class Machine:
     def __init__(self, config=None):
         self.config = config or {}
-        permitted={"name","verified","notes","source","source_commit","coordinate_derivation",
+        permitted={"name","verified","notes","source","source_commit","coordinate_derivation","provenance",
                    "bodies","fixtures","travel_limits","limits_reference","work_offsets",
                    "machine_origin","clearance_moves","tool_change_moves","tool_change_restores_tip","max_rpm"}
         if set(self.config)-permitted:

@@ -7,7 +7,7 @@ def test_timeline_click_and_drag_seek(monkeypatch):
     pytest.importorskip('PySide6')
     pytest.importorskip('pyqtgraph')
     from PySide6 import QtCore,QtWidgets,QtTest
-    from carvera_sim.viewer import SeekSlider
+    from cnc_sim.viewer import SeekSlider
     app=QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     slider=SeekSlider(QtCore.Qt.Orientation.Horizontal)
     slider.resize(1001,30);slider.setRange(0,1000000);slider.show();app.processEvents()
@@ -25,8 +25,8 @@ def test_metric_charts_values_cursor_and_seek(monkeypatch):
     pytest.importorskip('PySide6')
     import numpy as np
     from PySide6 import QtWidgets,QtTest
-    from carvera_sim.charts import MetricsCharts
-    from carvera_sim.metrics import METRIC_DTYPE
+    from cnc_sim.charts import MetricsCharts
+    from cnc_sim.metrics import METRIC_DTYPE
     app=QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     charts=MetricsCharts()
     data=np.array([(0,1,1,1,2,120,500,False),(1,2,2,1,0,0,0,True)],dtype=METRIC_DTYPE)

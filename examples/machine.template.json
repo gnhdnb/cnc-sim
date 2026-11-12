@@ -1,7 +1,7 @@
 {
-  "name":"Carvera/Air measurement template — illustrative dimensions, NOT factory measurements",
+  "name":"Generic 3-axis machine template — illustrative dimensions, NOT factory measurements",
   "verified":false,
-  "notes":"Replace every body dimension and waypoint with measured values. Gauge means the lowest holder face, at tool tip + tool stickout. All coordinates are in the same world frame as stock. These example dimensions do not certify a Carvera or Carvera Air.",
+  "notes":"Replace every body dimension and waypoint with measured values. Gauge means the lowest holder face, at tool tip + tool stickout. All coordinates are in the same world frame as stock. These example dimensions do not certify any physical machine.",
   "tool_change_restores_tip":false,
   "max_rpm":24000,
   "clearance_moves":[{"z":20},{"x":0,"y":0}],

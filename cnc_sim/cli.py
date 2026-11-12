@@ -17,14 +17,14 @@ from .engine import Stock, Machine, Simulator, save_result, warmup
 
 
 def argument_parser():
-    p=argparse.ArgumentParser(description="3-axis Carvera voxel verification. Output: bool XYZ .npy + JSON report.",
+    p=argparse.ArgumentParser(prog="cnc-sim",description="3-axis voxel CNC simulation and verification. Output: bool XYZ .npy + JSON report.",
                               formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument("nc",nargs="?",type=Path,help="NC/G-code file (UTF-8; BOM accepted)")
     p.add_argument("--stock",nargs=3,type=float,metavar=("X","Y","Z"),help="Stock dimensions in mm")
     p.add_argument("--stock-origin",nargs=3,type=float,metavar=("X","Y","Z"),help="Stock minimum corner; default (0,0,-height), top/front/left NC origin")
     p.add_argument("--pitch",type=float,default=.1,help="Voxel size in mm")
     p.add_argument("--tools",type=Path,help="JSON tools indexed by actual NC T number; overrides embedded @MKR tools")
-    p.add_argument("--machine",type=Path,help="JSON machine/fixtures/offsets/G28; default: unverified Carvera Air envelopes from official CAD")
+    p.add_argument("--machine",type=Path,help="JSON machine/fixtures/offsets/G28; default: bundled unverified nominal machine profile")
     p.add_argument("--start",nargs=3,type=float,metavar=("X","Y","Z"),help="Actual initial tip position in the simulation frame; default assumed (0,0,5)")
     p.add_argument("--initial-tool",type=int,default=1,help="Tool installed at program entry")
     p.add_argument("--rapid-feed",type=float,default=2400.,help="Default rapid feed in mm/min; affects time only")
@@ -41,7 +41,7 @@ def argument_parser():
     p.add_argument("--block-delete",action="store_true",help="Skip NC blocks starting with /; default executes them")
     p.add_argument("--json",action="store_true",help="Write the final machine-readable report to stdout; progress goes to stderr")
     p.add_argument("--quiet",action="store_true",help="Suppress progress on stderr")
-    p.add_argument("--list-tools",action="store_true",help="List the bundled Makera catalog as JSON and exit")
+    p.add_argument("--list-tools",action="store_true",help="List the bundled tool catalog as JSON and exit")
     p.add_argument("--version",action="version",version=__version__)
     return p
 
@@ -66,7 +66,7 @@ def prepare(args):
     tools={**embedded,**tools}
     if not tools:raise ValueError("NC has no usable embedded tool geometry; supply --tools tools.json")
     machine_data=(json.loads(args.machine.read_text(encoding="utf-8-sig")) if args.machine else
-                  json.loads(files("carvera_sim").joinpath("data/carvera_air_nominal.json").read_text(encoding="utf-8")))
+                  json.loads(files("cnc_sim").joinpath("data/default_machine.json").read_text(encoding="utf-8")))
     machine=Machine(machine_data)
     parser=Parser(start=args.start if args.start is not None else (0,0,5),initial_tool=args.initial_tool,
                   rapid_feed=args.rapid_feed,arc_tolerance=arc_tol,
@@ -95,7 +95,7 @@ def main(argv=None):
             print(f"Grid {stock.shape}: {stock.nbytes/1024**2:.1f} MiB; {len(program.moves):,} segments; compiling/warming kernels…",file=sys.stderr)
         grid=None
         if args.memmap:
-            working=tempfile.TemporaryDirectory(prefix="carvera-voxel-")
+            working=tempfile.TemporaryDirectory(prefix="cnc-sim-")
             grid=np.lib.format.open_memmap(Path(working.name)/"working.npy",mode="w+",dtype=np.bool_,shape=stock.shape)
         sim=Simulator(stock,tools,machine,grid=grid,margin=args.collision_margin,
                       start_verified=args.start is not None,warnings=warnings,

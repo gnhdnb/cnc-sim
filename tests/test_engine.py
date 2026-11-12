@@ -1,12 +1,12 @@
 import json
 import numpy as np
 import pytest
-from carvera_sim.engine import Stock,Machine,Simulator,SnapshotCache,save_result
-from carvera_sim.tools import make_tool,load_tools
-from carvera_sim.gcode import Parser
-from carvera_sim.replay import Replay
-from carvera_sim.cli import main
-from carvera_sim.mesh import stock_mesh
+from cnc_sim.engine import Stock,Machine,Simulator,SnapshotCache,save_result
+from cnc_sim.tools import make_tool,load_tools
+from cnc_sim.gcode import Parser
+from cnc_sim.replay import Replay
+from cnc_sim.cli import main
+from cnc_sim.mesh import stock_mesh
 
 
 def tool(**kwargs):

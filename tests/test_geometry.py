@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from carvera_sim.kernels import (frustum_span,first_frustum_hit,remove_sweep,collide_frusta,
+from cnc_sim.kernels import (frustum_span,first_frustum_hit,remove_sweep,collide_frusta,
                                 frustum_fixture_hit,box_fixture_hit,quadratic_hit,collide_boxes)
 
 

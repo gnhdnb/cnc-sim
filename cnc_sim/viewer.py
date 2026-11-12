@@ -17,7 +17,7 @@ from .charts import MetricsCharts
 
 
 # Keep recessed surfaces legible when their normal faces away from a light.
-gl.shaders.ShaderProgram("carvera_material", [
+gl.shaders.ShaderProgram("cnc_material", [
     gl.shaders.VertexShader("""
         uniform mat4 u_mvp;
         uniform mat3 u_normal;
@@ -78,7 +78,7 @@ class SeekSlider(QtWidgets.QSlider):
 
 class Worker(threading.Thread):
     def __init__(self,sim,program,output,report_extra):
-        super().__init__(daemon=True,name="carvera-simulation")
+        super().__init__(daemon=True,name="cnc-simulation")
         self.sim,self.program,self.output=sim,program,output
         self.extra=report_extra
         self.signals=Signals()
@@ -180,7 +180,7 @@ class Window(QtWidgets.QMainWindow):
         self.rendered_tool=None
         self.tool_items=[]
         self.last_tick=time.perf_counter()
-        self.setWindowTitle("Carvera • Voxel verification")
+        self.setWindowTitle("cnc-sim • Voxel verification")
         self.resize(1260,820)
         self.setStyleSheet("""
             QWidget {background:#151b24;color:#e4eaf2;font-size:13px;}
@@ -194,7 +194,7 @@ class Window(QtWidgets.QMainWindow):
         root=QtWidgets.QWidget();self.setCentralWidget(root)
         layout=QtWidgets.QVBoxLayout(root)
         header=QtWidgets.QHBoxLayout()
-        title=QtWidgets.QLabel("CARVERA  /  VOXEL SIMULATOR");title.setObjectName("title")
+        title=QtWidgets.QLabel("CNC-SIM  /  VOXEL SIMULATOR");title.setObjectName("title")
         header.addWidget(title);header.addStretch()
         self.badge=QtWidgets.QLabel("Preparing simulation…")
         header.addWidget(self.badge);layout.addLayout(header)
@@ -312,7 +312,7 @@ class Window(QtWidgets.QMainWindow):
                 continue
             if item is None:
                 item=gl.GLMeshItem(vertexes=vertices,faces=faces,smooth=False,color=(.76,.79,.83,1),
-                                   shader='carvera_material',glOptions='opaque')
+                                   shader='cnc_material',glOptions='opaque')
                 self.stock_items[key]=item;self.view.addItem(item)
             else:item.setMeshData(vertexes=vertices,faces=faces)
         if self.rendered_tool!=state["tool"]:

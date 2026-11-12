@@ -8,9 +8,9 @@ from pathlib import Path
 import numpy as np
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from PySide6 import QtCore,QtWidgets
-from carvera_sim.cli import argument_parser,prepare
-from carvera_sim.engine import Simulator
-from carvera_sim.viewer import Window
+from cnc_sim.cli import argument_parser,prepare
+from cnc_sim.engine import Simulator
+from cnc_sim.viewer import Window
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
     p.add_argument('--speed',type=float,default=10);p.add_argument('--output',type=Path,default=Path('playback.json'))
     p.add_argument('--quit-after',action='store_true');args=p.parse_args()
     if args.seconds<=0:p.error('--seconds must be positive')
-    temporary=tempfile.TemporaryDirectory(prefix='carvera-playback-')
+    temporary=tempfile.TemporaryDirectory(prefix='cnc-playback-')
     directory=Path(temporary.name)
     lines=['G21 G90 G17','S12000 M3','G0 X5 Y5 Z3 F1000']
     for layer in (1,2,3):
@@ -57,7 +57,7 @@ def main():
         args.output.parent.mkdir(parents=True,exist_ok=True)
         args.output.write_text(json.dumps(result,indent=2))
         print(json.dumps(result,indent=2),flush=True)
-        window.setWindowTitle('Carvera — playback benchmark complete')
+        window.setWindowTitle('cnc-sim — playback benchmark complete')
         if args.quit_after:window.close()
 
     def begin():

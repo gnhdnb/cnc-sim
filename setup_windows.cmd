@@ -11,4 +11,4 @@ if errorlevel 1 (
 if errorlevel 1 exit /b 1
 ".venv314\Scripts\python.exe" -m pip install ".[viewer]"
 if errorlevel 1 exit /b 1
-echo Installed. Run demo_viewer.cmd or use .venv314\Scripts\python.exe -m carvera_sim --help
+echo Installed. Run demo_viewer.cmd or use .venv314\Scripts\python.exe -m cnc_sim --help

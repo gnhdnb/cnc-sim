@@ -1,8 +1,8 @@
 {
-  "source": "https://github.com/MakeraInc/CarveraProfiles",
+  "source": "default_machine.json#provenance.tool_catalog",
   "source_commit": "de08a657bdc9c230a094dbdba792acd70bfcdf32",
   "retrieved": "2026-11-11",
-  "notes": "Numeric geometry extracted from official Fusion profiles; these are not a dump of the proprietary Studio database. Every entry is unverified until checked against the actual tool. Tool numbers must be mapped to your NC. Lasers and holders are not counted as carving tools.",
+  "notes": "Numeric geometry extracted from official Fusion profiles; these are not a dump of the proprietary Studio database. Every entry is unverified until checked against the actual tool. Tool numbers must be mapped to your NC. Lasers and holders are not counted as carving tools. Display names omit machine branding; original names remain accepted through provenance.tool_name_aliases in default_machine.json.",
   "tools": [
     {
       "id": "7df9f03d-55a3-459f-bf67-7f6d96834829",
@@ -7578,7 +7578,7 @@
     },
     {
       "id": "cf9e3477-7004-4242-bb74-b54ec65b5e1d",
-      "name": "Chamfering Bit - 1/8\u2033 Shank",
+      "name": "Chamfering Bit - 1/8″ Shank",
       "family": "v",
       "source_file": "Makera Other Tools.tools",
       "source_geometry": {
@@ -7614,7 +7614,7 @@
         }
       ],
       "spec": {
-        "name": "Chamfering Bit - 1/8\u2033 Shank",
+        "name": "Chamfering Bit - 1/8″ Shank",
         "type": "v",
         "diameter": 3.175,
         "flute_length": 3,
@@ -7704,7 +7704,7 @@
     },
     {
       "id": "b6b4ee77-048f-441c-8e1a-bd0426859c6a",
-      "name": "Carvera M1 Threadmill",
+      "name": "M1 Threadmill",
       "family": "thread",
       "source_file": "Makera Thread Mills.tools",
       "source_geometry": {
@@ -7743,7 +7743,7 @@
         }
       ],
       "spec": {
-        "name": "Carvera M1 Threadmill",
+        "name": "M1 Threadmill",
         "type": "thread",
         "diameter": 0.73,
         "flute_length": 2,
@@ -7786,7 +7786,7 @@
     },
     {
       "id": "9d3e618a-9e30-4725-b6af-81a8644092a0",
-      "name": "Carvera M2 Threadmill",
+      "name": "M2 Threadmill",
       "family": "thread",
       "source_file": "Makera Thread Mills.tools",
       "source_geometry": {
@@ -7825,7 +7825,7 @@
         }
       ],
       "spec": {
-        "name": "Carvera M2 Threadmill",
+        "name": "M2 Threadmill",
         "type": "thread",
         "diameter": 1.54,
         "flute_length": 2,
@@ -7868,7 +7868,7 @@
     },
     {
       "id": "bf1123dc-efce-4fc8-a24a-6ad10ca73b17",
-      "name": "Carvera M2.5 Threadmill",
+      "name": "M2.5 Threadmill",
       "family": "thread",
       "source_file": "Makera Thread Mills.tools",
       "source_geometry": {
@@ -7907,7 +7907,7 @@
         }
       ],
       "spec": {
-        "name": "Carvera M2.5 Threadmill",
+        "name": "M2.5 Threadmill",
         "type": "thread",
         "diameter": 1.96,
         "flute_length": 2,
@@ -7950,7 +7950,7 @@
     },
     {
       "id": "a818cbe7-79b8-4a3c-a1b7-54cfeff14ab7",
-      "name": "Carvera M3 Threadmill",
+      "name": "M3 Threadmill",
       "family": "thread",
       "source_file": "Makera Thread Mills.tools",
       "source_geometry": {
@@ -7989,7 +7989,7 @@
         }
       ],
       "spec": {
-        "name": "Carvera M3 Threadmill",
+        "name": "M3 Threadmill",
         "type": "thread",
         "diameter": 2.42,
         "flute_length": 2,
@@ -8032,7 +8032,7 @@
     },
     {
       "id": "4513185b-9b30-4d04-be3e-e5352e2a4263",
-      "name": "Carvera M4 Threadmill",
+      "name": "M4 Threadmill",
       "family": "thread",
       "source_file": "Makera Thread Mills.tools",
       "source_geometry": {
@@ -8071,7 +8071,7 @@
         }
       ],
       "spec": {
-        "name": "Carvera M4 Threadmill",
+        "name": "M4 Threadmill",
         "type": "thread",
         "diameter": 3.15,
         "flute_length": 2,
@@ -8114,7 +8114,7 @@
     },
     {
       "id": "2e8246db-4f63-45a2-acf9-bf601f1289b7",
-      "name": "Carvera M5 Threadmill",
+      "name": "M5 Threadmill",
       "family": "thread",
       "source_file": "Makera Thread Mills.tools",
       "source_geometry": {
@@ -8153,7 +8153,7 @@
         }
       ],
       "spec": {
-        "name": "Carvera M5 Threadmill",
+        "name": "M5 Threadmill",
         "type": "thread",
         "diameter": 4,
         "flute_length": 2,
@@ -8196,7 +8196,7 @@
     },
     {
       "id": "8390975a-7cca-469b-a272-b5d3ca49981c",
-      "name": "Carvera M6 Threadmill",
+      "name": "M6 Threadmill",
       "family": "thread",
       "source_file": "Makera Thread Mills.tools",
       "source_geometry": {
@@ -8235,7 +8235,7 @@
         }
       ],
       "spec": {
-        "name": "Carvera M6 Threadmill",
+        "name": "M6 Threadmill",
         "type": "thread",
         "diameter": 4.8,
         "flute_length": 2,
@@ -8286,7 +8286,7 @@
     },
     {
       "id": "29f36a53-0dbb-4763-9e1d-c393e86ccffa",
-      "name": "Carvera M8 Threadmill",
+      "name": "M8 Threadmill",
       "family": "thread",
       "source_file": "Makera Thread Mills.tools",
       "source_geometry": {
@@ -8325,7 +8325,7 @@
         }
       ],
       "spec": {
-        "name": "Carvera M8 Threadmill",
+        "name": "M8 Threadmill",
         "type": "thread",
         "diameter": 6,
         "flute_length": 2,

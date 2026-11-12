@@ -1,10 +1,10 @@
 import json
 import numpy as np
 import pytest
-from carvera_sim.metrics import stock_approach_speed, METRIC_DTYPE
-from carvera_sim.engine import Stock,Machine,Simulator,save_result,load_metrics,load_result
-from carvera_sim.gcode import Parser
-from carvera_sim.tools import make_tool
+from cnc_sim.metrics import stock_approach_speed, METRIC_DTYPE
+from cnc_sim.engine import Stock,Machine,Simulator,save_result,load_metrics,load_result
+from cnc_sim.gcode import Parser
+from cnc_sim.tools import make_tool
 
 
 def cutter():
@@ -94,8 +94,8 @@ def test_zero_duration_removal_and_allocation_guard():
 
 
 def test_replay_keeps_export_and_metric_history_unchanged(tmp_path):
-    from carvera_sim.engine import SnapshotCache
-    from carvera_sim.replay import Replay
+    from cnc_sim.engine import SnapshotCache
+    from cnc_sim.replay import Replay
     s=Stock([6,4,2],[0,0,-2],.1)
     p=Parser(start=(-2,2,1)).parse('S12000 M3\nG1 Z-1 F100\nG1 X8 F200\nG0 Z3')
     sim=Simulator(s,{1:cutter()})

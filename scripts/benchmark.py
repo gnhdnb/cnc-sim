@@ -7,9 +7,9 @@ import sys
 import time
 import numpy as np
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from carvera_sim.engine import Stock,Machine,Simulator,warmup
-from carvera_sim.tools import make_tool
-from carvera_sim.gcode import Parser
+from cnc_sim.engine import Stock,Machine,Simulator,warmup
+from cnc_sim.tools import make_tool
+from cnc_sim.gcode import Parser
 from importlib.resources import files
 
 
@@ -33,7 +33,7 @@ def main():
     began=time.perf_counter();program=Parser(start=(0,0,5)).parse('\n'.join(lines));parse_time=time.perf_counter()-began
     stock=Stock([80,60,12],[0,0,-12],args.pitch)
     cutter=make_tool(1,dict(type='flat',diameter=3.175,flute_length=8,shoulder_length=8,shank_diameter=3.175,stickout=25,verified=True))
-    machine=Machine(json.loads(files('carvera_sim').joinpath('data/carvera_air_nominal.json').read_text()))
+    machine=Machine(json.loads(files('cnc_sim').joinpath('data/default_machine.json').read_text()))
     simulator=Simulator(stock,{1:cutter},machine)
     report=simulator.run(program)
     result={key:report[key] for key in ['simulation_time_s','nominal_job_time_s','linearized_segments','removed_voxels','collision_count']}

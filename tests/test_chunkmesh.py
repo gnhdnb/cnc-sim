@@ -1,6 +1,6 @@
 import numpy as np
-from carvera_sim.chunkmesh import ChunkMesher,mesh_chunk
-from carvera_sim.engine import Stock
+from cnc_sim.chunkmesh import ChunkMesher,mesh_chunk
+from cnc_sim.engine import Stock
 
 
 def expected_faces(grid):
