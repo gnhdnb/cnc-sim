@@ -1,6 +1,6 @@
 {
   "date": "2026-11-12",
-  "package_version": "0.2.0",
+  "package_version": "0.2.1",
   "python": "3.14.10",
   "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
   "automated_tests": {
@@ -8,9 +8,9 @@
     "failed": 0,
     "errors": 0,
     "skipped": 0,
-    "duration_s": 9.778,
+    "duration_s": 15.056,
     "command": "python -m pytest -q",
-    "junit_file": "validation/tests.xml"
+    "junit_file": "validation/tests_depth_fix.xml"
   },
   "dependencies": {
     "numpy": "2.3.5",
@@ -69,7 +69,8 @@
     "compute_median_ms": 10.286256499512092,
     "compute_p95_ms": 24.05012624990377,
     "last_nominal_time_s": 97.66902491999645,
-    "note": "Native Qt/OpenGL window, full voxel detail; excludes initial verification, JIT and initial full mesh"
+    "note": "Native Qt/OpenGL window, full voxel detail; excludes initial verification, JIT and initial full mesh",
+    "measured_package_version": "0.2.0"
   },
   "synthetic_benchmark": {
     "simulation_time_s": 2.9246368539998002,
@@ -89,7 +90,8 @@
     "grid_bytes": 57600000,
     "jit_warmup_s": 0.12995501600016723,
     "parse_s": 0.1758448540003883,
-    "note": "Simulation time excludes JIT, initialization, parsing, UI and file export. Collisions enabled. Nominal CAD is unverified."
+    "note": "Simulation time excludes JIT, initialization, parsing, UI and file export. Collisions enabled. Nominal CAD is unverified.",
+    "measured_package_version": "0.2.0"
   },
   "mesh_microbenchmarks_file": "validation/mesh_microbenchmarks.json",
   "demo": {
@@ -120,7 +122,8 @@
     "build_succeeded": true,
     "installed_wheel_imports_passed": true,
     "package_data_checked": true,
-    "dependency_check_passed": true
+    "dependency_check_passed": true,
+    "measured_package_version": "0.2.0"
   },
   "git": {
     "branch": "main",
@@ -130,8 +133,26 @@
     "chunk_meshing_commit": "c44ac3d",
     "charts_playback_commit": "321d798",
     "batch_rendering_commit": "84291a3",
-    "note": "The final release documentation/version commit follows these; use git log for its hash."
+    "note": "Toolpath-overlay fix follows the 0.2.0 release; use git log for the latest patch hash.",
+    "feature_release_commit": "d7fd374"
   },
   "makera_source_commit": "de08a657bdc9c230a094dbdba792acd70bfcdf32",
-  "historical_validation": "validation/history_0_1_1.json"
+  "historical_validation": "validation/history_0_1_1.json",
+  "toolpath_overlay_fix": {
+    "package_version": "0.2.1",
+    "native_platform": "Linux/X11",
+    "python": "3.14.10",
+    "root_cause": "Additive path drawn before opaque stock with depth testing disabled; later stock erased the lines.",
+    "change": "Explicit additive path rendered after all meshes using depthValue 100.",
+    "checked": [
+      "old ordering reproduces stock occlusion",
+      "path overlay visible at unchanged geometry/camera",
+      "path stays visible during playback and orbit",
+      "stop/rewind replaces stock without covering the path",
+      "head visibility toggle remains functional"
+    ],
+    "numeric_engine_changed": false,
+    "output_schema_changed": false,
+    "performance_rebenchmarked": false
+  }
 }

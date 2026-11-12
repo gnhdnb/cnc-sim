@@ -30,10 +30,10 @@ Numba compiles and caches the numeric kernels on the first invocation, so that
 invocation has additional startup cost. A working OpenGL desktop driver is
 needed for the viewer.
 
-Version **0.2.0** targets Python 3.14. All **97 tests** passed on Linux with
+Version **0.2.1** targets Python 3.14. All **97 tests** passed on Linux with
 Python 3.14.10, including metric, meshing and Qt widget regressions. Native
 Python 3.14 desktop playback and chart/mouse controls were exercised. The
-80 × 60 × 12 mm benchmark achieved about **31 FPS at 0.1 mm display pitch**
+80 × 60 × 12 mm benchmark in 0.2.0 achieved about **31 FPS at 0.1 mm display pitch**
 with 10× playback, using Mesa software OpenGL. Initial verification and full
 mesh generation are excluded from this frame-rate measurement.
 Windows x64 Python 3.14 dependency wheels were resolved/downloaded during 0.1.1;
@@ -365,6 +365,8 @@ those files are saved, playback becomes available:
 - Left drag rotates; right/middle drag or Shift+left drag pans; wheel zooms.
 - Space toggles play/pause, Home stops/rewinds, Ctrl+Q closes.
 - Show/hide head geometry and toolpath; reset camera; select display detail.
+- Toolpaths render as a final overlay, including cuts inside stock, and stay visible
+  when playback or seeking replaces stock meshes (fixed in 0.2.1).
 
 Seeking restores compressed checkpoints and replays the missing path portion.
 The saved final result and metric history are immutable during playback.

@@ -1,16 +1,21 @@
-# Validation records for 0.2.0
+# Validation records for 0.2.1 and 0.2.0
 
 `../VALIDATION.json` is the current summary. These files preserve the underlying
 measurements and clearly separate historical results.
 
 | File | Evidence |
 |---|---|
-| `tests.xml` | Final Linux / CPython 3.14.10 run: 97 passed, none skipped |
+| `tests_depth_fix.xml` | 0.2.1 patch, Linux / CPython 3.14.10: 97 passed, none skipped |
+| `tests.xml` | 0.2.0 feature release, Linux / CPython 3.14.10: 97 passed, none skipped |
 | `native_playback.json` | Actual viewport swaps and worker-frame delivery; 0.1 mm, 57.6 million voxels, 10× speed, Mesa software OpenGL |
 | `headless_benchmark.json` | `scripts/benchmark.py` with metrics and collision checking enabled |
 | `mesh_microbenchmarks.json` | Old whole-grid scan and local one-chunk edit timings; CPU meshing only |
 | `demo_metrics.json` | Exact old/new bool-array equality, sample count, total removal and metric peaks |
 | `history_0_1_1.json` | Previous release's validation, kept as history; not current runtime/performance evidence |
+
+The 0.2.1 path-overlay fix was visually compared with the original draw order
+in the native window, including playback, orbit and rewind. Numeric kernels and
+output schemas were unchanged. Performance measurements below belong to 0.2.0.
 
 Native playback measurements exclude initial simulation/JIT/full meshing and
 arbitrary seeks. Mesh microbenchmark times are not desktop FPS. The temporary

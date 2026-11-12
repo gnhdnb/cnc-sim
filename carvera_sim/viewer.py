@@ -228,7 +228,10 @@ class Window(QtWidgets.QMainWindow):
         paths=np.array([[m.start,m.end] for m in program.moves],dtype=np.float32).reshape(-1,3)
         # Display path may be decimated; cutting geometry is never decimated.
         if len(paths)>400000:paths=paths.reshape(-1,2,3)[::int(np.ceil(len(paths)/400000))].reshape(-1,3)
-        self.path_item=gl.GLLinePlotItem(pos=paths,color=(.30,.60,.82,.22),mode="lines",width=1,antialias=False)
+        self.path_item=gl.GLLinePlotItem(pos=paths,color=(.30,.60,.82,.22),mode="lines",width=1,antialias=False,glOptions="additive")
+        # The path is an inspection overlay (including future cuts inside stock).
+        # Draw it after meshes, even when replay replaces/adds stock or tool items.
+        self.path_item.setDepthValue(100)
         self.view.addItem(self.path_item)
         axes=gl.GLAxisItem();axes.setSize(10,10,10);self.view.addItem(axes)
         self.reset_view()

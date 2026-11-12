@@ -1,8 +1,8 @@
 # Carvera voxel simulator — engineering handover
 
-**Snapshot:** 12 November 2026 · **package:** `carvera-voxel-sim` 0.2.0 · **runtime:** standard, GIL-enabled, 64-bit CPython 3.14.
+**Snapshot:** 12 November 2026 · **package:** `carvera-voxel-sim` 0.2.1 · **runtime:** standard, GIL-enabled, 64-bit CPython 3.14.
 
-This document describes the delivered implementation, its design rationale, the evidence collected, and the work that remains. It is intended to let another agent continue without the original conversation. Source references and function names refer to the 0.2.0 repository/archive identified below. Decisions are implementation choices, not claims that the model reproduces every behavior of a real controller.
+This document describes the delivered implementation, its design rationale, the evidence collected, and the work that remains. It is intended to let another agent continue without the original conversation. Source references and function names refer to the 0.2.1 repository/archive identified below. Decisions are implementation choices, not claims that the model reproduces every behavior of a real controller.
 
 ## 1. Start here
 
@@ -14,13 +14,17 @@ The latest requested work is implemented in **0.2.0**: local Git with incrementa
 
 Native Windows execution and physical setup acceptance remain unfinished. The default is nominal, unverified **Carvera Air** geometry. The 124-tool catalog is not an exhaustive proprietary Makera Studio database export. Preserve these distinctions.
 
+**Latest patch, 0.2.1:** fixed the toolpath being overwritten by the stock. `GLLinePlotItem` uses additive blending with depth testing disabled; drawing it before stock meant later opaque stock painting erased it. The path now explicitly uses `glOptions="additive"` and `setDepthValue(100)`, so it draws after stock, fixtures and tool/head meshes even when they are replaced on seek or tool change. `depthValue` controls draw order, not geometric Z. The path is intentionally an inspection overlay, including segments inside or behind stock. No toolpath coordinate offset, stock transparency change, simulation/kernel or NPY schema change was made.
+
+Native Linux/Python 3.14 verification reproduced the old rendering by temporarily switching the item's draw order, then checked the fix during playback, orbit and stop/rewind. The comparison control was temporary test code and is not shipped. The complete 97-test suite passed again in 15.056 s. The 31.21 FPS figure below is the **0.2.0 benchmark**, not a new 0.2.1 measurement.
+
 ### Delivered source and repository
 
 [Download carvera-voxel-sim.zip](https://chatgpt.com/library?file_id=libfile_fde3_f-ccf424dfa2388191b14add94ab57380c_e95ac02493bc8191a8d2024072df5f9a&account_id=personal)
 
 | Property | Current value |
 |---|---|
-| Package / runtime | `0.2.0`; `>=3.14,<3.15` |
+| Package / runtime | `0.2.1`; `>=3.14,<3.15` |
 | Archive top-level folder | `carvera-voxel-sim/` |
 | Git | Local repository, branch `main`, no external remote; `.git` included in source ZIP |
 | Handover | `HANDOVER.md` in the repository; identical standalone `CARVERA_SIM_HANDOVER.md` |
@@ -36,7 +40,8 @@ Git history is the authoritative change record. Run `git status --short` and `gi
 | `c44ac3d` | Incremental full-resolution chunk meshing and boundary oracle tests |
 | `321d798` | Linked charts and incremental desktop playback |
 | `84291a3` | Single-draw stock batching, layout fixes and native benchmark script |
-| Following release commit | Version 0.2.0, final regression/evidence, refreshed example and documentation; obtain hash with `git log` |
+| `d7fd374` | Version 0.2.0, final regression/evidence, refreshed example and documentation |
+| Following patch commit | Version 0.2.1, final toolpath-overlay draw order, refreshed tests and handover; obtain hash with `git log` |
 
 The import came from the previous 79,991-byte 0.1.1 ZIP, SHA-256 `045690f5fb56510ddcb94469d7e79831c3476b75853232d3955a545afd7a677f`. That checksum describes the **old import only**, not this ZIP. Do not put a self-referential current archive hash inside a document included in that archive.
 
@@ -577,7 +582,7 @@ A representative one-chunk edit measured **3.36 ms** median / **3.62 ms** p95 fo
 
 Worker resets all chunks when replay restored stock, seek generation changed, or display stride changed. Generation reset is necessary because the GUI can discard an in-flight stale frame while the worker cache has already advanced. Arbitrary seeks and initial meshing are still roughly one-second operations for this benchmark. The UI remains on its own thread, but closing can wait for a current kernel or chunk; cancellation is checked between chunks.
 
-Optional 2×/4× previews retain the old max-pooled whole-grid mesher and its 400,000-quad fallback behavior. Those explicitly coarse modes can hide small cavities. **Full resolution defaults to stride 1 and never invokes that fallback.** Display path decimation is independent of actual simulated moves. No GPU simulation backend or loss of full XYZ stock resolution was introduced.
+Optional 2×/4× previews retain the old max-pooled whole-grid mesher and its 400,000-quad fallback behavior. Those explicitly coarse modes can hide small cavities. **Full resolution defaults to stride 1 and never invokes that fallback.** Display path decimation is independent of actual simulated moves. No GPU simulation backend or loss of full XYZ stock resolution was introduced. The path overlay is drawn after all mesh items with an explicit higher draw-order value; it is intentionally visible through stock for inspection, and no global depth-buffer settings are changed.
 
 ### Charts and controls
 
@@ -646,7 +651,7 @@ Report current results separately rather than relabeling old benchmark numbers a
 
 ## 13. Validation evidence and regression expectations
 
-### Current Python 3.14 validation (0.2.0)
+### Python 3.14 validation (0.2.0 feature release)
 
 - CPython **3.14.10**, standard x64 Linux.
 - **97 passed, 0 failed, 0 errors, 0 skipped**; final full-suite JUnit duration **9.778 s**.
@@ -880,4 +885,4 @@ The Makera numerical data are pinned. The unversioned documentation links can ch
 
 ## 17. Continuation brief
 
-Continue from **0.2.0**, standard x64 **Python 3.14**, local branch **main**. Preserve continuous full-XYZ removal, collision-before-cut chronology, strict unsupported-NC rejection and explicit incomplete geometry. Dynamic diagnostics are sampled interval mean removal and peak voxel-face approach within 20 mm; both reside in the same NPY after the backward-compatible bool grid. Default full-resolution playback remeshes dirty chunks and batches cached surfaces into one GPU draw. The new 97-test suite, native ~31 FPS benchmark, and exact demo-grid regression are the current evidence. Native Windows acceptance and measured Carvera Air geometry remain the highest-value unfinished work. Make further changes in reviewable Git commits and keep this handover and validation facts current.
+Continue from **0.2.1**, standard x64 **Python 3.14**, local branch **main**. Preserve continuous full-XYZ removal, collision-before-cut chronology, strict unsupported-NC rejection and explicit incomplete geometry. Dynamic diagnostics are sampled interval mean removal and peak voxel-face approach within 20 mm; both reside in the same NPY after the backward-compatible bool grid. Default full-resolution playback remeshes dirty chunks and batches cached surfaces into one GPU draw. Keep the toolpath in the final overlay draw order so added/replaced meshes cannot cover it. The new 97-test suite, native ~31 FPS benchmark, and exact demo-grid regression are the current evidence. Native Windows acceptance and measured Carvera Air geometry remain the highest-value unfinished work. Make further changes in reviewable Git commits and keep this handover and validation facts current.
