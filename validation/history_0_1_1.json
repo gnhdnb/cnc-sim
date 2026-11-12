@@ -74,7 +74,7 @@
   },
   "makera_topclamp_configuration": "100 x 100 x 5 mm stock, embedded tool metadata, illustrative machine.template.json with explicitly supplied G28 path; status incomplete. Performance test only, not physical job certification.",
   "source_commit": "de08a657bdc9c230a094dbdba792acd70bfcdf32",
-  "wheel_build": "carvera_voxel_sim-0.1.1-py3-none-any.whl built successfully with Python 3.14; metadata and package data verified",
+  "wheel_build": "Historical version 0.1.1 wheel built successfully with Python 3.14; metadata and package data verified",
   "package_version": "0.1.1",
   "dependencies": {
     "numpy": "2.3.5",

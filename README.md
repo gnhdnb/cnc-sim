@@ -1,4 +1,4 @@
-# Carvera voxel simulator
+# cnc-sim
 
 A Python 3-axis CNC material-removal simulator and geometric collision checker.
 Default voxel pitch is **0.1 mm (100 µm)**. The result is a genuine 3D NumPy
@@ -7,6 +7,12 @@ boolean array, including cavities and undercuts, rather than a height map.
 Headless operation requires NumPy and Numba. The optional native desktop viewer
 uses PySide6 Essentials, PyQtGraph and OpenGL. There is no network service or
 connection to the CNC machine.
+
+The distribution and CLI are named `cnc-sim`; the Python package is `cnc_sim`.
+After upgrading from a release before 0.3.0, reinstall the project and update
+imports and commands to the new names. Existing NPY results retain the same
+format. Machine branding is confined to the bundled default configuration;
+provide `--machine my_machine.json` for your own geometry and controller waypoints.
 
 ## Windows quick start
 
@@ -21,16 +27,17 @@ Equivalent PowerShell commands, from this folder:
 ```powershell
 py -3.14 -m venv .venv314
 .\.venv314\Scripts\python.exe -m pip install ".[viewer]"
-.\.venv314\Scripts\python.exe -m carvera_sim examples/demo.nc --stock 30 20 6 --tools examples/tools.json --start 0 0 5 --output result.npy --visualize
+.\.venv314\Scripts\python.exe -m cnc_sim examples/demo.nc --stock 30 20 6 --tools examples/tools.json --machine examples/machine.template.json --start 0 0 5 --output result.npy --visualize
 ```
 
 For headless-only installation, install `.` instead of `.[viewer]`.
+The installed CLI can also be invoked as `cnc-sim --help`.
 No Visual Studio/C++ compiler is required; dependencies have Windows x64 wheels.
 Numba compiles and caches the numeric kernels on the first invocation, so that
 invocation has additional startup cost. A working OpenGL desktop driver is
 needed for the viewer.
 
-Version **0.2.2** targets Python 3.14. All **97 tests** passed on Linux with
+Version **0.3.0** targets Python 3.14. All **98 tests** passed on Linux with
 Python 3.14.10, including metric, meshing and Qt widget regressions. Native
 Python 3.14 desktop playback and chart/mouse controls were exercised. The
 80 × 60 × 12 mm benchmark in 0.2.0 achieved about **31 FPS at 0.1 mm display pitch**
@@ -44,7 +51,7 @@ not been run on GitHub as part of this delivery.
 ## Run your job
 
 ```powershell
-.\.venv314\Scripts\python.exe -m carvera_sim job.nc --stock 50 50 5 --tools my_tools.json --machine my_machine.json --start 0 0 10 -o result.npy
+.\.venv314\Scripts\python.exe -m cnc_sim job.nc --stock 50 50 5 --tools my_tools.json --machine my_machine.json --start 0 0 10 -o result.npy
 ```
 
 Add `--visualize` to open the desktop window. Omit it for agent verification.
@@ -56,10 +63,10 @@ Embedded metadata does not automatically count as verified geometry.
 Minimum input with supported embedded tools:
 
 ```powershell
-.\.venv314\Scripts\python.exe -m carvera_sim job.nc --stock 50 50 5 -o result.npy
+.\.venv314\Scripts\python.exe -m cnc_sim job.nc --stock 50 50 5 -o result.npy
 ```
 
-This uses a nominal Carvera Air head model, assumes initial tip `(0,0,5)`, and
+This uses the bundled nominal machine profile, assumes initial tip `(0,0,5)`, and
 returns an **incomplete** verification status until those assumptions are
 resolved. It still computes and saves the stock.
 
@@ -74,7 +81,7 @@ Thus NC zero is the top/front/left corner. The positional argument order for
 
 ```powershell
 # Stock centred in XY, with its top at Z=0:
-.\.venv314\Scripts\python.exe -m carvera_sim job.nc --stock 50 50 5 --stock-origin -25 -25 -5 --tools my_tools.json --start 0 0 10 -o result.npy
+.\.venv314\Scripts\python.exe -m cnc_sim job.nc --stock 50 50 5 --stock-origin -25 -25 -5 --tools my_tools.json --start 0 0 10 -o result.npy
 ```
 
 `--start X Y Z` is the actual starting **tool-tip** position in this same
@@ -117,7 +124,7 @@ check the exit code and the report's NC hash before consuming it.
 For agents:
 
 ```powershell
-.\.venv314\Scripts\python.exe -m carvera_sim job.nc --stock 50 50 5 --tools my_tools.json --machine my_machine.json --start 0 0 10 -o result.npy --json --quiet
+.\.venv314\Scripts\python.exe -m cnc_sim job.nc --stock 50 50 5 --tools my_tools.json --machine my_machine.json --start 0 0 10 -o result.npy --json --quiet
 ```
 
 The final report is the only stdout JSON. Progress/errors otherwise go to
@@ -170,7 +177,7 @@ a nonzero peak even though its start was farther away. Use smaller sampling
 limits when inspecting a short transient:
 
 ```powershell
-.\.venv314\Scripts\python.exe -m carvera_sim job.nc --stock 50 50 5 --tools my_tools.json --start 0 0 10 -o result.npy --metrics-period 0.02 --metrics-distance 0.2 --visualize
+.\.venv314\Scripts\python.exe -m cnc_sim job.nc --stock 50 50 5 --tools my_tools.json --start 0 0 10 -o result.npy --metrics-period 0.02 --metrics-distance 0.2 --visualize
 ```
 
 The default `--max-metric-samples` guard is 2,000,000 (57 bytes per row).
@@ -181,7 +188,7 @@ backlash, deflection or material-force simulation. They expose potentially
 hazardous commands; no material-specific danger threshold is inferred.
 
 ```python
-from carvera_sim.engine import load_result, load_metrics
+from cnc_sim.engine import load_result, load_metrics
 
 stock, metrics = load_result("result.npy")  # stock is memory-mapped by default
 material_removal_rate = metrics["removal_rate_mm3_min"]
@@ -277,7 +284,7 @@ database**, and downloaded catalog entries are unverified by default.
 List the catalog:
 
 ```powershell
-.\.venv314\Scripts\python.exe -m carvera_sim --list-tools > catalog.json
+.\.venv314\Scripts\python.exe -m cnc_sim --list-tools > catalog.json
 ```
 
 Assign a catalog entry to a job T number by its exact `id` or unique `name`:
@@ -307,13 +314,14 @@ Lasers are outside this mechanical milling simulator's scope.
 
 ## Machine and fixtures
 
-The default `carvera_sim/data/carvera_air_nominal.json` comes from the **Z
-component of Makera's official simplified Carvera Air STEP model**. It includes
+The default `cnc_sim/data/default_machine.json` is an explicitly named,
+unverified machine profile derived from simplified CAD. Its machine identity
+and source provenance are recorded only in that configuration. It includes
 the lower nose/holder, spindle nose, motor envelope and Z head plate. Cylinder
 radii are extracted from CAD; motor/plate boxes conservatively enclose their
 CAD geometry. The coordinate transform and source commit are in the JSON.
 
-This profile is unverified and is **not a Carvera C1 profile**. It does not
+This profile is unverified and must be replaced or measured for your machine. It does not
 include probes, dust shoes, hoses, wiring, the X gantry or the enclosure.
 Add relevant geometry and fixtures for your setup. The separate
 `examples/machine.template.json` uses explicitly illustrative dimensions and
@@ -335,16 +343,17 @@ Fixed fixture boxes are in the stock/simulation coordinate frame:
 The cutting tool also collides with fixtures; they are never removed as stock.
 Frustum/box contacts with fixture boxes are tested continuously and do not
 depend on the stock voxel pitch. Curved fixtures can be conservatively bounded
-by boxes. General STL/STEP collision meshes are not an input format in v0.1.
+by boxes. General STL/STEP collision meshes are not an input format.
 
 Optional machine keys:
 
 | Key | Meaning |
 |---|---|
 | `verified` | You have validated the machine bodies against this setup |
+| `provenance` | Optional source URLs, controller notes and other metadata; does not alter geometry |
 | `work_offsets` | `{"G54":[0,0,0],"G55":[x,y,z]}`: workspace origins in the simulation frame |
 | `machine_origin` | Position of machine-coordinate zero in the simulation frame; required by G53/G10 |
-| `clearance_moves` | Ordered world-frame partial waypoints, e.g. `[{"z":20},{"x":0,"y":0}]`, used for Carvera G28 |
+| `clearance_moves` | Ordered world-frame partial waypoints, e.g. `[{"z":20},{"x":0,"y":0}]`, used for the configured G28 sequence |
 | `tool_change_restores_tip` | Confirms that M6 returns to the same programmed tip position; hidden service motion remains excluded |
 | `tool_change_moves` | Optional explicit post-change return waypoints, interpreted in the simulation frame |
 | `travel_limits` | `{"min":[x,y,z],"max":[x,y,z]}` in the simulation frame |
@@ -352,8 +361,9 @@ Optional machine keys:
 | `max_rpm` | Optional spindle speed ceiling |
 
 No unknown machine home, clearance point, fixture position or tool offset is
-invented. A G28 without configured waypoints is an error. Carvera G28 means
-clearance positioning, not a generic return-to-home move. Tool-change service
+invented. A G28 without configured waypoints is an error. The parser models
+only the configured waypoint sequence; controller-specific homing, intermediate
+positions and axis selection are not inferred. Tool-change service
 paths, probing and calibration routines are excluded from this simulator.
 
 ## Viewer
@@ -414,9 +424,9 @@ the native playback measurement (with head and path visible) using:
 Rotary/auxiliary axes, cutter compensation G41/G42, numeric tool compensation
 G43, probing, homing G28.2, height maps, macros, loops, subprograms, unsupported
 machine M codes and ambiguous words are rejected. They are not silently skipped.
-G20 is geometrically converted but warns about documented community-firmware
-inch-mode issues. Canned-cycle support is a parser capability, not a claim that
-every Carvera firmware accepts those commands.
+G20 is geometrically converted, with a warning that controller-specific
+inch-mode behavior is not modeled. Canned-cycle support is a parser capability;
+check that the target controller accepts those commands.
 
 ## Accuracy, collisions and speed
 
@@ -468,9 +478,9 @@ voxels; increase `--max-voxels` explicitly only when suitable.
 ## Python API and tests
 
 ```python
-from carvera_sim.engine import Stock, Machine, Simulator, save_result
-from carvera_sim.gcode import Parser
-from carvera_sim.tools import load_tools
+from cnc_sim.engine import Stock, Machine, Simulator, save_result
+from cnc_sim.gcode import Parser
+from cnc_sim.tools import load_tools
 import json
 
 tools = load_tools("my_tools.json")
@@ -504,12 +514,10 @@ architecture, metric definitions, output compatibility and continuation work;
 
 ## Sources
 
-- [Makera CarveraProfiles](https://github.com/MakeraInc/CarveraProfiles), pinned
-  to `de08a657bdc9c230a094dbdba792acd70bfcdf32`: numeric cutter/holder profiles,
-  simplified Air STEP and TopClamp NC example.
+- The default profile in `cnc_sim/data/default_machine.json` records the
+  original machine CAD, controller documentation and tool catalog URLs, pinned
+  to `de08a657bdc9c230a094dbdba792acd70bfcdf32` where applicable.
 - [Makera CAM tool library guide](https://wiki.makera.com/en/software/MakeraCAM_userguide).
-- [Carvera Community G codes](https://carvera-community.gitbook.io/docs/firmware/supported-commands/gcodes).
-- [Carvera Community M codes](https://carvera-community.gitbook.io/docs/firmware/supported-commands/mcodes).
 
 This is an independent simulator. It is not an official Makera product or a
 machine safety certification. A `clear_in_model` result covers the configured

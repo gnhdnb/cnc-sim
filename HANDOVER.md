@@ -1,8 +1,8 @@
-# Carvera voxel simulator — engineering handover
+# cnc-sim — engineering handover
 
-**Snapshot:** 12 November 2026 · **package:** `carvera-voxel-sim` 0.2.2 · **runtime:** standard, GIL-enabled, 64-bit CPython 3.14.
+**Snapshot:** 12 November 2026 · **package:** `cnc-sim` 0.3.0 · **runtime:** standard, GIL-enabled, 64-bit CPython 3.14.
 
-This document describes the delivered implementation, its design rationale, the evidence collected, and the work that remains. It is intended to let another agent continue without the original conversation. Source references and function names refer to the 0.2.2 repository/archive identified below. Decisions are implementation choices, not claims that the model reproduces every behavior of a real controller.
+This document describes the delivered implementation, its design rationale, the evidence collected, and the work that remains. It is intended to let another agent continue without the original conversation. Source references and function names refer to the 0.3.0 repository/archive identified below. Decisions are implementation choices, not claims that the model reproduces every behavior of a real controller.
 
 ## 1. Start here
 
@@ -10,26 +10,28 @@ The simulator accepts three-axis NC and rectangular stock, removes material from
 
 The metrics and rendering work was implemented in **0.2.0**: local Git with incremental commits; material removal rate (MRR, mm³/min); stock approach speed (positive normal component, mm/min) within 20 mm; both metrics in the result NPY and linked charts above the timeline; incremental full-resolution rendering; and this updated handover.
 
-**97 tests passed** on Linux/Python 3.14.10. Native desktop playback measured **31.21 FPS** on an 800 × 600 × 120 grid (57.6 million 0.1 mm voxels) at 10× playback using Mesa llvmpipe software OpenGL. This excludes verification, initial meshing and arbitrary seeks. The reproducible headless raster benchmark, including metrics and collisions, took **2.92 s** for a nominal **1,941.80 s** job.
+**98 tests passed** on Linux/Python 3.14.10. Native desktop playback measured **31.21 FPS** on an 800 × 600 × 120 grid (57.6 million 0.1 mm voxels) at 10× playback using Mesa llvmpipe software OpenGL. This excludes verification, initial meshing and arbitrary seeks. The reproducible headless raster benchmark, including metrics and collisions, took **2.92 s** for a nominal **1,941.80 s** job.
 
-Native Windows execution and physical setup acceptance remain unfinished. The default is nominal, unverified **Carvera Air** geometry. The 124-tool catalog is not an exhaustive proprietary Makera Studio database export. Preserve these distinctions.
+Native Windows execution and physical setup acceptance remain unfinished. The bundled default configuration is a nominal, unverified model of one machine; it is not universal geometry. The 124-tool catalog is not an exhaustive proprietary Makera Studio database export. Preserve these distinctions.
 
-**Latest patch, 0.2.2:** standardized the chart titles and code/documentation terminology as **Material removal rate** (MRR, mm³/min) and **Stock approach speed** (mm/min). Chart tooltips explain interval averaging, the positive voxel-face-normal component, the 20 mm probe cutoff and start/mid/end peak sampling. `METRIC_LABELS` supplies the shared display names; the calculation is named `stock_approach_speed()`, with `normal_approach` retained as an alias for existing callers. NPY fields `removal_rate_mm3_min` and `approach_speed_mm_min`, JSON keys, units, row layout and numerical calculations remain compatible with 0.2.0/0.2.1. JSON definition strings use the new terminology. No performance benchmark was repeated for this naming-only patch. The full 97-test suite passed in 9.142 s (`validation/tests_metric_names.xml`); offscreen chart titles/tooltips and layout were checked, and the 0.2.0 example metrics still load without conversion.
+**Latest release, 0.3.0:** the distribution, repository, CLI and window are named `cnc-sim`; the import/module name is `cnc_sim`. Windows launchers, CI, benchmark scripts and package resources use the new namespace. Reinstall after upgrading and update external imports/commands; the previous package namespace and CLI are not shipped as aliases. NPY/JSON field schemas and numeric geometry are unchanged. Machine branding and original source references are confined to `cnc_sim/data/default_machine.json`. The generic example uses `examples/machine.template.json`; neither profile is verified. The 124-tool catalog is now `data/tool_catalog.json`; stable catalog IDs and numeric geometry are preserved, and renamed display names retain lookup aliases in the default configuration. G28 still requires explicit ordered waypoints; this release does not claim support for arbitrary controller homing semantics. Existing Git history is preserved. Machine configuration now accepts an optional `provenance` metadata block; other unknown fields remain errors. The full suite passed in 6.925 s (98 tests). The Python 3.14 wheel was built and installed separately, then its CLI/module entry points, resource loading, default/custom profiles and offscreen window/header labels were checked. The regenerated generic example retains exactly the same stock array and all 426 metric rows as 0.2.2. The wheel and current tracked source were scanned for residual machine branding outside the default configuration. See `validation/project_rename.json` and `validation/tests_project_rename.xml`; native OpenGL performance was not remeasured.
+
+**Previous patch, 0.2.2:** standardized the chart titles and code/documentation terminology as **Material removal rate** (MRR, mm³/min) and **Stock approach speed** (mm/min). Chart tooltips explain interval averaging, the positive voxel-face-normal component, the 20 mm probe cutoff and start/mid/end peak sampling. `METRIC_LABELS` supplies the shared display names; the calculation is named `stock_approach_speed()`, with `normal_approach` retained as an alias for existing callers. NPY fields `removal_rate_mm3_min` and `approach_speed_mm_min`, JSON keys, units, row layout and numerical calculations remain compatible with 0.2.0/0.2.1. JSON definition strings use the new terminology. No performance benchmark was repeated for this naming-only patch. The full 97-test suite passed in 9.142 s (`validation/tests_metric_names.xml`); offscreen chart titles/tooltips and layout were checked, and the 0.2.0 example metrics still load without conversion.
 
 **Previous patch, 0.2.1:** fixed the toolpath being overwritten by the stock. `GLLinePlotItem` uses additive blending with depth testing disabled; drawing it before stock meant later opaque stock painting erased it. The path now explicitly uses `glOptions="additive"` and `setDepthValue(100)`, so it draws after stock, fixtures and tool/head meshes even when they are replaced on seek or tool change. `depthValue` controls draw order, not geometric Z. The path is intentionally an inspection overlay, including segments inside or behind stock. No toolpath coordinate offset, stock transparency change, simulation/kernel or NPY schema change was made.
 
-Native Linux/Python 3.14 verification reproduced the old rendering by temporarily switching the item's draw order, then checked the fix during playback, orbit and stop/rewind. The comparison control was temporary test code and is not shipped. The complete 97-test suite passed again in 15.056 s. The 31.21 FPS figure below is the **0.2.0 benchmark**, not a new 0.2.1 or 0.2.2 measurement.
+Native Linux/Python 3.14 verification reproduced the old rendering by temporarily switching the item's draw order, then checked the fix during playback, orbit and stop/rewind. The comparison control was temporary test code and is not shipped. The complete 97-test suite passed again in 15.056 s. The 31.21 FPS figure below is the **0.2.0 benchmark**, not a new 0.2.1, 0.2.2 or 0.3.0 measurement.
 
 ### Delivered source and repository
 
-[Download carvera-voxel-sim.zip](https://chatgpt.com/library?file_id=libfile_fde3_f-ccf424dfa2388191b14add94ab57380c_e95ac02493bc8191a8d2024072df5f9a&account_id=personal)
+[Download cnc-sim.zip](https://chatgpt.com/library?file_id=libfile_fde3_f-ccf424dfa2388191b14add94ab57380c_e95ac02493bc8191a8d2024072df5f9a&account_id=personal)
 
 | Property | Current value |
 |---|---|
-| Package / runtime | `0.2.2`; `>=3.14,<3.15` |
-| Archive top-level folder | `carvera-voxel-sim/` |
+| Package / runtime | `0.3.0`; `>=3.14,<3.15` |
+| Archive top-level folder | `cnc-sim/` |
 | Git | Local repository, branch `main`, no external remote; `.git` included in source ZIP |
-| Handover | `HANDOVER.md` in the repository; identical standalone `CARVERA_SIM_HANDOVER.md` |
+| Handover | `HANDOVER.md` in the repository; identical standalone `CNC_SIM_HANDOVER.md` |
 | Validation | `VALIDATION.json`, supporting records under `validation/` |
 | Example export | Regenerated with v2 report and appended metrics; voxel grid exactly matches the original reference |
 
@@ -44,7 +46,9 @@ Git history is the authoritative change record. Run `git status --short` and `gi
 | `84291a3` | Single-draw stock batching, layout fixes and native benchmark script |
 | `d7fd374` | Version 0.2.0, final regression/evidence, refreshed example and documentation |
 | `69786e7` | Version 0.2.1, final toolpath-overlay draw order, refreshed tests and handover |
-| Following patch commit | Version 0.2.2, metric terminology, chart tooltips and compatibility; obtain hash with `git log` |
+| `3dd9874` | Version 0.2.2, metric terminology, chart tooltips and compatibility |
+| `6918f37` | Version 0.3.0, project/package/UI rename, default config/provenance and catalog alias compatibility |
+| Following commit | Version 0.3.0, generic example export, validation and handover; obtain hash with `git log` |
 
 The import came from the previous 79,991-byte 0.1.1 ZIP, SHA-256 `045690f5fb56510ddcb94469d7e79831c3476b75853232d3955a545afd7a677f`. That checksum describes the **old import only**, not this ZIP. Do not put a self-referential current archive hash inside a document included in that archive.
 
@@ -59,7 +63,7 @@ The import came from the previous 79,991-byte 0.1.1 ZIP, SHA-256 `045690f5fb5651
 
 ## 2. User goal and scope
 
-The original request was a Python voxel **three-axis Carvera CNC simulator** with:
+The original request was a Python voxel **three-axis CNC simulator** with:
 
 - NC file and stock dimensions as inputs.
 - A simulated final job result saved as a NumPy array.
@@ -72,7 +76,7 @@ The original request was a Python voxel **three-axis Carvera CNC simulator** wit
 
 The user subsequently required **Python 3.14**, then requested this 0.2.0 iteration: create Git history, add the two dynamic metrics and charts, make full-resolution playback usable in real time, and update the handover. Their purpose is to spot plunges and fast approaches that can cause a hit when real motion is imperfect. Do not add guessed material-specific danger thresholds or claim that a geometric diagnostic models those imperfections. They prefer incremental implementation and verified numbers, with limitations stated plainly.
 
-Relevant workshop context: the user's machine is a **Carvera Air**, and they use community controller/firmware. They also do four-axis work, but the requested simulator is explicitly three-axis. Rotary axes are currently rejected. Do not infer that four-axis support exists because the user owns that accessory.
+Relevant workshop context: the user's machine motivated the bundled default profile, and they use its community controller/firmware. They also do four-axis work, but the requested simulator is explicitly three-axis. Rotary axes are currently rejected. Do not infer that four-axis support exists because the user owns that accessory.
 
 The intended use is geometric NC verification. The application has no connection to the machine and sends no control commands. It is not a controller emulator, cutting-force solver, crash-proof machine certificate, or material-specific feeds/speeds advisor.
 
@@ -98,7 +102,7 @@ This was an explicit engineering interpretation of the resolution requirement. A
 | Default machine | Nominal Air envelopes extracted from official simplified CAD, marked unverified | Better provenance than invented dimensions; still requires physical verification and accessory geometry. |
 | Unknown NC behavior | Reject unsupported commands/syntax | An agent must not receive a successful result from a silently altered toolpath. The parser is intentionally a restricted dialect. |
 | Work/machine coordinates | One explicit simulation frame; configured offsets | Avoids inventing machine home, WCS positions or tool-length tables. |
-| G28 | Explicit ordered clearance waypoints | Carvera-specific clearance positioning is not treated as generic G-code homing. |
+| G28 | Explicit ordered clearance waypoints | Controller-specific clearance positioning and homing are not inferred. |
 | M6 | Tool state changes plus optionally supplied return waypoints | Hidden service/probe/ATC movement is excluded. Default return-position assumption is reported as incomplete. |
 | Tool identification | Explicit NC T-number mapping, optional catalog lookup or supported NC metadata | Catalog IDs and job tool slots are different concepts. Names alone cannot prove installed geometry. |
 | Verification status | Separate collision, incomplete-model and clear-in-model outcomes | Zero detected collisions must not silently imply verified geometry. |
@@ -139,22 +143,22 @@ flowchart TD
 
 | File | Responsibilities and primary entry points |
 |---|---|
-| `carvera_sim/cli.py` | `argument_parser()`, `prepare(args)`, `main(argv)`: input validation, metadata precedence, model construction, headless or GUI dispatch, exit codes and temporary memmap cleanup. |
-| `carvera_sim/gcode.py` | `NCError`, `Move`, `Program`, `Parser`, `arc_points()`: strict modal parsing and expansion to timed straight segments. |
-| `carvera_sim/tools.py` | `Tool`, `Body`, `make_tool()`, `make_body()`, `profile_frusta()`, `load_tools()`, `embedded_tools()`: cutter and assembly geometry. |
-| `carvera_sim/catalog.py` | `catalog()`, `resolve_tool_spec()`: package-resource loading and explicit catalog lookup. |
-| `carvera_sim/kernels.py` | Continuous sweep/removal/contact routines and numeric interval/quadratic helpers. |
-| `carvera_sim/engine.py` | `Stock`, `Machine`, `Simulator`, `SimulationReport`, `SnapshotCache`, `save_result()`, `load_metrics()`, `load_result()`, `warmup()`: simulation, sampled metrics, collisions, checkpoints and two-array export. |
-| `carvera_sim/replay.py` | `Replay.seek()`, `Replay.part()`: GUI-independent, fractional, bidirectional replay. |
-| `carvera_sim/metrics.py` | `METRIC_DTYPE`, `sample_count()`, `stock_approach_speed()`, `has_stock_ahead()`, `metric_summary()`: sample schema and six-direction stock approach queries. |
-| `carvera_sim/chunkmesh.py` | `ChunkMesher`, `mesh_chunk()`, `chunk_mesh_kernel()`, `cutting_bounds()`: dirty chunks, seam ownership, cached surfaces and single-draw packing. |
-| `carvera_sim/charts.py` | `MetricsCharts`: two linked plots, cursor/time synchronization, click and drag seek signals. |
-| `carvera_sim/mesh.py` | `stock_mesh()`, `greedy_mesh()`, `pooled()`, `frusta_mesh()`, `boxes_mesh()`: rendering geometry only. |
-| `carvera_sim/viewer.py` | `Worker`, `Signals`, `SeekSlider`, `View`, `Window`, `launch()`: native desktop UI and asynchronous preparation/replay. |
-| `carvera_sim/__init__.py` | Package `__version__`. Keep it aligned with `pyproject.toml`. |
-| `carvera_sim/__main__.py` | Enables `python -m carvera_sim`. |
-| `carvera_sim/data/makera_catalog.json` | 124 nominal cutters and original numeric source geometry. |
-| `carvera_sim/data/carvera_air_nominal.json` | Default unverified Air assembly envelopes and CAD transform/provenance. |
+| `cnc_sim/cli.py` | `argument_parser()`, `prepare(args)`, `main(argv)`: input validation, metadata precedence, model construction, headless or GUI dispatch, exit codes and temporary memmap cleanup. |
+| `cnc_sim/gcode.py` | `NCError`, `Move`, `Program`, `Parser`, `arc_points()`: strict modal parsing and expansion to timed straight segments. |
+| `cnc_sim/tools.py` | `Tool`, `Body`, `make_tool()`, `make_body()`, `profile_frusta()`, `load_tools()`, `embedded_tools()`: cutter and assembly geometry. |
+| `cnc_sim/catalog.py` | `catalog()`, `resolve_tool_spec()`: package-resource loading and explicit catalog lookup. |
+| `cnc_sim/kernels.py` | Continuous sweep/removal/contact routines and numeric interval/quadratic helpers. |
+| `cnc_sim/engine.py` | `Stock`, `Machine`, `Simulator`, `SimulationReport`, `SnapshotCache`, `save_result()`, `load_metrics()`, `load_result()`, `warmup()`: simulation, sampled metrics, collisions, checkpoints and two-array export. |
+| `cnc_sim/replay.py` | `Replay.seek()`, `Replay.part()`: GUI-independent, fractional, bidirectional replay. |
+| `cnc_sim/metrics.py` | `METRIC_DTYPE`, `sample_count()`, `stock_approach_speed()`, `has_stock_ahead()`, `metric_summary()`: sample schema and six-direction stock approach queries. |
+| `cnc_sim/chunkmesh.py` | `ChunkMesher`, `mesh_chunk()`, `chunk_mesh_kernel()`, `cutting_bounds()`: dirty chunks, seam ownership, cached surfaces and single-draw packing. |
+| `cnc_sim/charts.py` | `MetricsCharts`: two linked plots, cursor/time synchronization, click and drag seek signals. |
+| `cnc_sim/mesh.py` | `stock_mesh()`, `greedy_mesh()`, `pooled()`, `frusta_mesh()`, `boxes_mesh()`: rendering geometry only. |
+| `cnc_sim/viewer.py` | `Worker`, `Signals`, `SeekSlider`, `View`, `Window`, `launch()`: native desktop UI and asynchronous preparation/replay. |
+| `cnc_sim/__init__.py` | Package `__version__`. Keep it aligned with `pyproject.toml`. |
+| `cnc_sim/__main__.py` | Enables `python -m cnc_sim`. |
+| `cnc_sim/data/tool_catalog.json` | 124 nominal cutters and original numeric source geometry. |
+| `cnc_sim/data/default_machine.json` | Default unverified nominal assembly envelopes and CAD transform/provenance. |
 | `examples/tools.json` | Synthetic/example flat, ball, V, drill and thread tool dimensions; all unverified. |
 | `examples/machine.template.json` | Illustrative machine and G28 configuration, not factory data. |
 | `examples/demo.nc` | Two-tool pocket/circular-feature demonstration. |
@@ -162,7 +166,7 @@ flowchart TD
 | `examples/results/` | Current 0.2.0 sample NPY/report, with original voxel geometry preserved exactly and 426 appended metric rows. |
 | `scripts/benchmark.py` | Reproducible synthetic raster benchmark with collisions and metrics enabled. |
 | `scripts/benchmark_playback.py` | Native Qt/OpenGL benchmark: actual swaps, delivered frames, worker compute latency, GL renderer, display pitch and speed. Optional `--quit-after`; otherwise leaves window open for inspection. |
-| `tests/` | Seven test modules; 97 test cases after parametrization. |
+| `tests/` | Seven test modules; 98 test cases after parametrization. |
 | `.github/workflows/tests.yml` | Windows/Linux Python 3.14 matrix; tests and viewer imports. Not run on GitHub in this session. |
 | `setup_windows.cmd`, `demo_viewer.cmd` | Windows bootstrap and demonstration; CRLF line endings. |
 | `README.md`, `HANDOVER.md`, `VALIDATION.json`, `validation/` | User manual, current engineering context, tests/performance and explicitly labeled historical evidence. |
@@ -206,15 +210,15 @@ py -3.14 -m venv .venv314
 .\.venv314\Scripts\python.exe -m pip install --upgrade pip
 .\.venv314\Scripts\python.exe -m pip install ".[test,viewer]"
 .\.venv314\Scripts\python.exe -m pytest -q
-.\.venv314\Scripts\python.exe -m carvera_sim --version
+.\.venv314\Scripts\python.exe -m cnc_sim --version
 ```
 
-For headless-only use, install `.` rather than `.[viewer]`. The installed console entry point is `carvera-sim`; `python -m carvera_sim` is often simpler when an agent must select an exact interpreter.
+For headless-only use, install `.` rather than `.[viewer]`. The installed console entry point is `cnc-sim`; `python -m cnc_sim` is often simpler when an agent must select an exact interpreter.
 
 ### Changes from 0.1.0 to 0.1.1
 
 - Runtime requirement changed from `>=3.11,<3.14` to `>=3.14,<3.15`.
-- Package version changed in both `pyproject.toml` and `carvera_sim/__init__.py`.
+- Package version changed in both `pyproject.toml` and `cnc_sim/__init__.py`.
 - NumPy, Numba, PySide6 and pytest minimums were raised.
 - Windows scripts now call `py -3.14` and use `.venv314`.
 - README commands and GitHub Actions matrix now target 3.14.
@@ -328,7 +332,7 @@ Limitations that must remain explicit:
 Read the two metrics separately:
 
 ```python
-from carvera_sim.engine import load_result
+from cnc_sim.engine import load_result
 stock, metrics = load_result('result.npy')
 material_removal_rate = metrics['removal_rate_mm3_min']
 stock_approach_speed = metrics['approach_speed_mm_min']
@@ -414,7 +418,7 @@ Thread entries use revolved triangular tooth envelopes. Actual tooth location, t
 
 ## 8. Machine model and collision frame
 
-The default is `carvera_sim/data/carvera_air_nominal.json`, derived from the Z component of Makera's official `Machine_Design_Files/Carvera_Air_Simplified.step` at the pinned commit. It is `verified: false` and `tool_change_restores_tip: false`.
+The default is `cnc_sim/data/default_machine.json`, derived from the Z component of the simplified CAD identified by its `source` and `source_commit` fields. Machine branding, original source URLs and controller-specific notes are kept in that configuration. It is `verified: false` and `tool_change_restores_tip: false`.
 
 The extraction recorded local spindle centre `x = -74.0385852576533`, `z ≈ 29`, and the lower nose face at `y = 201.458967162417` in the CAD component frame. The transformation is:
 
@@ -474,7 +478,7 @@ Initial state is mm, G90, incremental arc centres, G17, G54, G0, G94, spindle of
 | G53 | G90 G0/G1 movement with configured `machine_origin`. |
 | G10 L2 P1..6 | Work-offset update using machine origin; a new offset requires XYZ unless already configured. |
 | G92 / .1 / .2 / .3 | Temporary offset set, clear, suspend and restore. |
-| G28 | Standalone Carvera clearance move requiring explicit ordered waypoints. |
+| G28 | Standalone configured waypoint sequence; requires explicit ordered clearance waypoints. |
 | G93/G94 | Inverse-time / units-per-minute feed. G93 requires F on every feed block. |
 | G81/G82/G83 | Expanded drilling cycles in G17/G94; R/Z, dwell, pecks and repeats. |
 | G98/G99, G80 | Initial-plane/R-plane cycle retract; cycle cancellation. |
@@ -492,7 +496,7 @@ Community-style `G0 ... F...` is block-local when supplied with rapid axis motio
 
 Arcs use right-handed plane mappings: G17 `(X,Y,Z)`, G18 `(Z,X,Y)`, G19 `(Y,Z,X)`. Inconsistent endpoint radii beyond `max(1e-7, arc_tolerance)` are rejected. Tiny accepted rounding discrepancies are interpolated rather than creating a final jump. Each arc is guarded against generating more than two million segments.
 
-G83 re-entry toward the previous depth is deliberately emitted at feed, rather than guessing a controller-specific rapid clearance. Cycle repeat and peck counts are guarded. Cycle parsing capability does not imply every Carvera firmware accepts those cycles.
+G83 re-entry toward the previous depth is deliberately emitted at feed, rather than guessing a controller-specific rapid clearance. Cycle repeat and peck counts are guarded. Cycle parsing capability does not imply every target controller firmware accepts those cycles.
 
 Nested parenthesized comments, semicolon comments, blank lines, `%`, line numbers and bare O program labels are handled. `/` block deletion follows the CLI flag.
 
@@ -500,7 +504,7 @@ Nested parenthesized comments, semicolon comments, blank lines, `%`, line number
 
 Rotary/auxiliary `A B C U V W`, cutter compensation G41/G42, numeric tool-length compensation G43/H tables, probing, homing G28.2, height-map compensation, macros/variables, loops and subprogram calls, and unknown G/M commands are rejected. Duplicate words, conflicting supported modal commands, malformed syntax and unconsumed geometric parameters are also rejected in the implemented paths.
 
-This is not a complete formal parser for all RS-274 or Carvera firmware combinations. If a real export fails, establish the exact meaning and add a regression before implementing it. Do not solve compatibility by adding an unconditional “ignore unknown command” mode to verification.
+This is not a complete formal parser for all RS-274 dialects or controller firmware combinations. If a real export fails, establish the exact meaning and add a regression before implementing it. Do not solve compatibility by adding an unconditional “ignore unknown command” mode to verification.
 
 ### M6 limitation
 
@@ -678,7 +682,7 @@ The original Python 3.12 GUI checks covered rendering, controls, tool-change dis
 |---|---|
 | `tests/test_geometry.py` | Exact capsule comparison; ramps/tapers against independent dense sampling; leading/trailing-body chronology; thin fixture on a long move; randomized cone/fixture cases; stationary and quadratic tangencies; isolated endpoint contact; moving boxes. |
 | `tests/test_gcode.py` | Modal units/offsets, local rapid F, all arc planes, full-circle helix, signed-R arcs, inverse-time feed, absolute centres, G53/G10, parser reuse, cycles, G28, G4 S, comments/block delete/M6, G49 and rejection cases. |
-| `tests/test_tools.py` | Construction of all 124 catalog entries, tool families, rounded-tip chord bound, embedded metadata overrides and invalid dimensions/types. |
+| `tests/test_tools.py` | Construction of all 124 catalog entries, tool families, rounded-tip chord bound, embedded metadata overrides, renamed catalog display-name aliases and invalid dimensions/types. |
 | `tests/test_engine.py` | Spindle/rapid behavior, machine bodies, fixtures, limits, true undercuts, output round-trip, checkpoints/partial replay, stock boundaries, meshes, memmap, Unicode/space paths, errors, initial overlap and strict JSON fields. |
 | `tests/test_metrics.py` | 20 mm threshold, normal component vs total feed, retreat/tangency/stationary, all six directions, pockets/undercuts, volume/rate conservation, rapid-zero rate, both NPY records and mmap compatibility, legacy/corrupt input, allocation guard, zero-duration NaN and immutable exports through replay. |
 | `tests/test_chunkmesh.py` | Independent exposed-face oracle on random solids and combined packing, boundary edits, reset, no internal seams, checkerboard buffer growth without coarsening, partial-stock bounds. |
@@ -691,7 +695,7 @@ The sampled-reference tests are independent approximations with boundary allowan
 Run from the project directory:
 
 ```powershell
-.\.venv314\Scripts\python.exe -m carvera_sim examples/demo.nc --stock 30 20 6 --tools examples/tools.json --start 0 0 5 --output demo_result.npy --json --quiet
+.\.venv314\Scripts\python.exe -m cnc_sim examples/demo.nc --stock 30 20 6 --tools examples/tools.json --machine examples/machine.template.json --start 0 0 5 --output demo_result.npy --json --quiet
 ```
 
 Expected baseline:
@@ -719,7 +723,7 @@ For a deliberate crash, substitute `examples/collision.nc` with the same stock/t
 ### Agent-facing invocation
 
 ```powershell
-.\.venv314\Scripts\python.exe -m carvera_sim job.nc --stock 50 50 5 --tools my_tools.json --machine my_machine.json --start 0 0 10 --output job_result.npy --json --quiet
+.\.venv314\Scripts\python.exe -m cnc_sim job.nc --stock 50 50 5 --tools my_tools.json --machine my_machine.json --start 0 0 10 --output job_result.npy --json --quiet
 ```
 
 Inspect the process exit code before deciding what to do with stdout. Exit 2 or 3 still produces completed result files; exit 1 may leave an older output intact.
@@ -759,9 +763,9 @@ This verifies pair consistency, not physical setup correctness. Also compare `in
 ```python
 from pathlib import Path
 import json
-from carvera_sim.engine import Stock, Machine, Simulator, save_result, warmup
-from carvera_sim.gcode import Parser
-from carvera_sim.tools import load_tools
+from cnc_sim.engine import Stock, Machine, Simulator, save_result, warmup
+from cnc_sim.gcode import Parser
+from cnc_sim.tools import load_tools
 
 config = json.loads(Path("my_machine.json").read_text(encoding="utf-8-sig"))
 tools = load_tools("my_tools.json", tolerance=0.005)
@@ -859,9 +863,9 @@ The earlier scratch workspace was not available at the start of this iteration. 
 
 | Current path | Contents |
 |---|---|
-| `/workspace/scratch/81ce3209d11c/carvera-voxel-sim` | Git repository, 0.2.0 source, handover, current and historical validation |
-| `/workspace/scratch/81ce3209d11c/carvera-voxel-sim.zip` | Updated deliverable including `.git` |
-| `/workspace/scratch/81ce3209d11c/CARVERA_SIM_HANDOVER.md` | Standalone copy of repository `HANDOVER.md` |
+| `/workspace/scratch/81ce3209d11c/cnc-sim` | Git repository, 0.3.0 source, handover, current and historical validation |
+| `/workspace/scratch/81ce3209d11c/cnc-sim.zip` | Updated deliverable including `.git` |
+| `/workspace/scratch/81ce3209d11c/CNC_SIM_HANDOVER.md` | Standalone copy of repository `HANDOVER.md` |
 | `/workspace/scratch/81ce3209d11c/research/venv314` | Test/development environment, CPython 3.14.10 |
 | `/workspace/scratch/81ce3209d11c/research/native-python` | Temporary Python copy for native desktop testing; not part of package |
 | `/workspace/scratch/81ce3209d11c/research/dist` | Built 0.2.0 wheel, not required to use source ZIP |
@@ -873,13 +877,10 @@ The prior handover mentioned `research/makera_db_converter.txt`, an exploratory 
 
 ### Source material already consulted
 
-- [Makera CarveraProfiles at the pinned commit](https://github.com/MakeraInc/CarveraProfiles/tree/de08a657bdc9c230a094dbdba792acd70bfcdf32): numeric cutter profiles, simplified CAD and example NC.
+The default configuration records the original CAD URL in `source` and the catalog, sample NC and controller documentation in `provenance`. Consult those fields for the original source URLs and the pinned commit; the project name does not replace source attribution.
+
 - Tool profiles under `CAM_Post_Processors/Fusion360-profiles/Tool Files/`, including Ball Endmills, Corn Bits, Drill Bits, Engraving Bits, O Flute Bits, Other Tools and Thread Mills.
-- [Official simplified Carvera Air STEP](https://github.com/MakeraInc/CarveraProfiles/blob/de08a657bdc9c230a094dbdba792acd70bfcdf32/Machine_Design_Files/Carvera_Air_Simplified.step).
-- [Official TopClamp NC example](https://github.com/MakeraInc/CarveraProfiles/blob/de08a657bdc9c230a094dbdba792acd70bfcdf32/Sample_Files/TopClamp.nc).
 - [Makera CAM user/tool-library guide](https://wiki.makera.com/en/software/MakeraCAM_userguide).
-- [Carvera Community G-code documentation](https://carvera-community.gitbook.io/docs/firmware/supported-commands/gcodes).
-- [Carvera Community M-code documentation](https://carvera-community.gitbook.io/docs/firmware/supported-commands/mcodes).
 - [Numba 0.63 release notes](https://numba.readthedocs.io/en/0.67.0/release/0.63.0-notes.html) and package metadata used when checking Python 3.14 support.
 - [Qt for Python release notes](https://doc.qt.io/qtforpython-6/release_notes/pyside6_release_notes.html).
 - [Shiboken6 6.12.0 package description](https://pypi.org/project/shiboken6/6.12.0/).
@@ -888,4 +889,4 @@ The Makera numerical data are pinned. The unversioned documentation links can ch
 
 ## 17. Continuation brief
 
-Continue from **0.2.2**, standard x64 **Python 3.14**, local branch **main**. Preserve continuous full-XYZ removal, collision-before-cut chronology, strict unsupported-NC rejection and explicit incomplete geometry. Dynamic diagnostics are material removal rate (sampled interval mean) and stock approach speed (sampled peak voxel-face-normal component within 20 mm); both reside in the same NPY after the backward-compatible bool grid. Default full-resolution playback remeshes dirty chunks and batches cached surfaces into one GPU draw. Keep the toolpath in the final overlay draw order so added/replaced meshes cannot cover it. The new 97-test suite, native ~31 FPS benchmark, and exact demo-grid regression are the current evidence. Native Windows acceptance and measured Carvera Air geometry remain the highest-value unfinished work. Make further changes in reviewable Git commits and keep this handover and validation facts current.
+Continue from **0.3.0**, standard x64 **Python 3.14**, local branch **main**. Preserve continuous full-XYZ removal, collision-before-cut chronology, strict unsupported-NC rejection and explicit incomplete geometry. Dynamic diagnostics are material removal rate (sampled interval mean) and stock approach speed (sampled peak voxel-face-normal component within 20 mm); both reside in the same NPY after the backward-compatible bool grid. Default full-resolution playback remeshes dirty chunks and batches cached surfaces into one GPU draw. Keep the toolpath in the final overlay draw order so added/replaced meshes cannot cover it. Use the current automated-test record in `VALIDATION.json`; the native ~31 FPS benchmark is historical 0.2.0 evidence. The exact demo-grid regression is preserved. Native Windows acceptance and measured machine geometry remain the highest-value unfinished work. Make further changes in reviewable Git commits and keep this handover and validation facts current.

@@ -1,16 +1,16 @@
 {
   "date": "2026-11-12",
-  "package_version": "0.2.2",
+  "package_version": "0.3.0",
   "python": "3.14.10",
   "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
   "automated_tests": {
-    "passed": 97,
+    "passed": 98,
     "failed": 0,
     "errors": 0,
     "skipped": 0,
-    "duration_s": 9.142,
-    "command": "python -m pytest -q --junitxml=validation/tests_metric_names.xml",
-    "junit_file": "validation/tests_metric_names.xml"
+    "duration_s": 6.925,
+    "command": "python -m pytest -q --junitxml=validation/tests_project_rename.xml",
+    "junit_file": "validation/tests_project_rename.xml"
   },
   "dependencies": {
     "numpy": "2.3.5",
@@ -44,7 +44,11 @@
       "Ctrl+Q close"
     ],
     "export_unchanged_by_replay_regression": true,
-    "note": "Export invariance is covered by an automated forward/backward replay test; desktop controls were manually exercised."
+    "note": "Export invariance is covered by an automated forward/backward replay test; desktop controls were manually exercised.",
+    "measured_package_versions": [
+      "0.2.0",
+      "0.2.1"
+    ]
   },
   "native_playback": {
     "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
@@ -105,7 +109,9 @@
     "peak_removal_mm3_min": 1800.0000000000389,
     "peak_approach_mm_min": 2400.0,
     "schema_version": 2,
-    "simulator_version": "0.2.0"
+    "simulator_version": "0.3.0",
+    "machine_profile": "examples/machine.template.json",
+    "metrics_identical_to_0_2_2": true
   },
   "windows": {
     "native_execution_tested": false,
@@ -118,12 +124,15 @@
     "ci_run_performed": false
   },
   "packaging": {
-    "wheel": "carvera_voxel_sim-0.2.0-py3-none-any.whl",
+    "wheel": "cnc_sim-0.3.0-py3-none-any.whl",
     "build_succeeded": true,
+    "build_python": "3.14.10",
     "installed_wheel_imports_passed": true,
     "package_data_checked": true,
+    "console_entry_point_checked": true,
+    "module_entry_point_checked": true,
     "dependency_check_passed": true,
-    "measured_package_version": "0.2.0"
+    "measured_package_version": "0.3.0"
   },
   "git": {
     "branch": "main",
@@ -133,9 +142,11 @@
     "chunk_meshing_commit": "c44ac3d",
     "charts_playback_commit": "321d798",
     "batch_rendering_commit": "84291a3",
-    "note": "Metric terminology patch follows 0.2.1; use git log for the latest patch hash.",
+    "note": "The documentation and validation commit follows the project rename; use git log for the final release hash.",
     "feature_release_commit": "d7fd374",
-    "toolpath_overlay_commit": "69786e7"
+    "toolpath_overlay_commit": "69786e7",
+    "metric_terminology_commit": "3dd9874",
+    "project_rename_commit": "6918f37"
   },
   "makera_source_commit": "de08a657bdc9c230a094dbdba792acd70bfcdf32",
   "historical_validation": "validation/history_0_1_1.json",
@@ -179,5 +190,6 @@
     "numeric_calculation_changed": false,
     "output_schema_changed": false,
     "performance_rebenchmarked": false
-  }
+  },
+  "project_rename_validation_file": "validation/project_rename.json"
 }

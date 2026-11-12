@@ -1,0 +1,18 @@
+{
+  "package_version": "0.3.0",
+  "python": "3.14.10",
+  "installed_module": "/workspace/scratch/81ce3209d11c/research/installed-cnc-sim/cnc_sim/__init__.py",
+  "console_version": "0.3.0",
+  "console_help_checked": true,
+  "catalog_tools": 124,
+  "default_profile_loaded": true,
+  "generic_profile_simulation_exit_code": 3,
+  "example_grid_identical": true,
+  "example_metrics_identical": true,
+  "example_metric_samples": 426,
+  "window_title": "cnc-sim \u2022 Voxel verification",
+  "window_header": "CNC-SIM  /  VOXEL SIMULATOR",
+  "window_check": "Qt offscreen construction; no new native OpenGL rendering or performance benchmark",
+  "wheel": "cnc_sim-0.3.0-py3-none-any.whl",
+  "branding_confined_to_default_config": true
+}
