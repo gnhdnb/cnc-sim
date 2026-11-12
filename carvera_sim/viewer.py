@@ -4,6 +4,7 @@ import sys
 import threading
 import time
 import traceback
+from collections import deque
 import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
 import pyqtgraph.opengl as gl
@@ -11,6 +12,8 @@ import pyqtgraph.opengl as gl
 from .engine import SnapshotCache, save_result, warmup
 from .replay import Replay
 from .mesh import stock_mesh, frusta_mesh, boxes_mesh
+from .chunkmesh import ChunkMesher
+from .charts import MetricsCharts
 
 
 # Keep recessed surfaces legible when their normal faces away from a light.
@@ -104,16 +107,28 @@ class Worker(threading.Thread):
             self.exit_code=report["exit_code"]
             self.signals.ready.emit(report)
             replay=Replay(self.sim,self.program,snapshots)
-            self.request(0.,0,0)
+            chunks=ChunkMesher(self.sim.grid,self.sim.stock)
+            previous_generation=None
+            previous_stride=None
+            self.request(0.,1,0)
             while not self.stopping.is_set():
                 with self.condition:
                     while self.pending is None and not self.stopping.is_set():self.condition.wait()
                     if self.stopping.is_set():break
                     seconds,stride,generation=self.pending
                     self.pending=None
+                frame_start=time.perf_counter()
                 state=replay.seek(seconds,self.stopping.is_set)
-                vertices,faces,actual_stride=stock_mesh(self.sim.grid,self.sim.stock,stride)
-                state.update(vertices=vertices,faces=faces,stride=actual_stride,generation=generation)
+                reset=state['reset_stock'] or generation!=previous_generation or stride!=previous_stride
+                if stride==1:
+                    updates=chunks.update(state['dirty_bounds'],reset=reset,cancelled=self.stopping.is_set)
+                    actual_stride=1
+                else:
+                    vertices,faces,actual_stride=stock_mesh(self.sim.grid,self.sim.stock,stride)
+                    updates=[((-1,-1,-1),vertices,faces)];reset=True
+                previous_generation,previous_stride=generation,stride
+                state.update(mesh_updates=updates,reset_mesh=reset,stride=actual_stride,generation=generation,
+                             frame_compute_ms=(time.perf_counter()-frame_start)*1000)
                 self.signals.frame.emit(state)
         except InterruptedError:
             pass
@@ -124,6 +139,17 @@ class Worker(threading.Thread):
 
 class View(gl.GLViewWidget):
     """Explicit mouse mapping, consistent on Windows/Linux/macOS."""
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.paint_times=deque(maxlen=61)
+        self.frameSwapped.connect(lambda:self.paint_times.append(time.perf_counter()))
+
+    @property
+    def fps(self):
+        if len(self.paint_times)<2:return 0.
+        span=self.paint_times[-1]-self.paint_times[0]
+        return (len(self.paint_times)-1)/span if span>0 else 0.
+
     def mouseMoveEvent(self,event):
         delta=event.position()-self.mousePos
         self.mousePos=event.position()
@@ -181,9 +207,7 @@ class Window(QtWidgets.QMainWindow):
         splitter.addWidget(side)
         self.view=View();self.view.setBackgroundColor((20,26,35,255));splitter.addWidget(self.view)
         splitter.setSizes([270,950])
-        self.stock_item=gl.GLMeshItem(vertexes=np.empty((0,3)),faces=np.empty((0,3),dtype=np.uint32),
-                                      smooth=False,color=(.76,.79,.83,1),shader="carvera_material",glOptions="opaque")
-        self.view.addItem(self.stock_item)
+        self.stock_items={}
         self.fixture_items=[]
         for name,box in sim.machine.fixtures:
             vertices,faces=boxes_mesh([box])
@@ -196,6 +220,9 @@ class Window(QtWidgets.QMainWindow):
         self.view.addItem(self.path_item)
         axes=gl.GLAxisItem();axes.setSize(10,10,10);self.view.addItem(axes)
         self.reset_view()
+        self.charts=MetricsCharts()
+        self.charts.seekRequested.connect(self.chart_seek)
+        layout.addWidget(self.charts)
         self.timeline=SeekSlider(QtCore.Qt.Orientation.Horizontal)
         self.timeline.setPageStep(10000);self.timeline.setSingleStep(1000)
         self.timeline.setRange(0,1000000);self.timeline.setEnabled(False)
@@ -215,8 +242,8 @@ class Window(QtWidgets.QMainWindow):
         bar.addWidget(self.seconds)
         bar.addWidget(QtWidgets.QLabel("Display"))
         self.detail=QtWidgets.QComboBox()
-        for label,stride in (("Auto",0),("Full resolution",1),("2× voxels",2),("4× voxels",4)):self.detail.addItem(label,stride)
-        self.detail.currentIndexChanged.connect(lambda:self.request_frame());bar.addWidget(self.detail)
+        for label,stride in (("Full resolution",1),("2× voxels",2),("4× voxels",4)):self.detail.addItem(label,stride)
+        self.detail.currentIndexChanged.connect(lambda:self.seek(self.target));bar.addWidget(self.detail)
         self.show_head=QtWidgets.QCheckBox("Head");self.show_head.setChecked(True)
         self.show_head.toggled.connect(self.toggle_head);bar.addWidget(self.show_head)
         show_path=QtWidgets.QCheckBox("Path");show_path.setChecked(True)
@@ -245,6 +272,7 @@ class Window(QtWidgets.QMainWindow):
 
     def ready(self,report):
         self.report=report
+        self.charts.set_metrics(self.sim.metrics,self.program.duration)
         status=report["status"]
         self.badge.setText(status.replace("_"," ").upper())
         self.badge.setStyleSheet("color:"+("#f0957d" if status=="collisions" else "#edc56a" if status=="incomplete" else "#7ad4b1"))
@@ -259,7 +287,19 @@ class Window(QtWidgets.QMainWindow):
 
     def frame(self,state):
         if state["generation"]!=self.generation:return
-        self.stock_item.setMeshData(vertexes=state["vertices"],faces=state["faces"])
+        if state['reset_mesh']:
+            for item in self.stock_items.values():self.view.removeItem(item)
+            self.stock_items.clear()
+        for key,vertices,faces in state['mesh_updates']:
+            item=self.stock_items.get(key)
+            if not len(faces):
+                if item is not None:self.view.removeItem(item);del self.stock_items[key]
+                continue
+            if item is None:
+                item=gl.GLMeshItem(vertexes=vertices,faces=faces,smooth=False,color=(.76,.79,.83,1),
+                                   shader='carvera_material',glOptions='opaque')
+                self.stock_items[key]=item;self.view.addItem(item)
+            else:item.setMeshData(vertexes=vertices,faces=faces)
         if self.rendered_tool!=state["tool"]:
             for item,role in self.tool_items:self.view.removeItem(item)
             self.tool_items=[]
@@ -279,13 +319,15 @@ class Window(QtWidgets.QMainWindow):
         with QtCore.QSignalBlocker(self.timeline):
             self.timeline.setValue(round(1000000*state["time_s"]/max(self.program.duration,1e-10)))
         with QtCore.QSignalBlocker(self.seconds):self.seconds.setValue(state["time_s"])
+        self.charts.set_time(state['time_s'])
         x,y,z=state["tip"]
-        self.position.setText(f"L{state['line']:,} · T{state['tool']} · X {x:.3f}  Y {y:.3f}  Z {z:.3f} mm · {state['rpm']:g} rpm · {state['time_s']:.2f} / {self.program.duration:.2f} s · display {state['stride']*self.sim.stock.pitch:g} mm; simulation {self.sim.stock.pitch:g} mm")
+        self.position.setText(f"L{state['line']:,} · T{state['tool']} · X {x:.3f}  Y {y:.3f}  Z {z:.3f} mm · {state['time_s']:.2f}/{self.program.duration:.2f} s · display {state['stride']*self.sim.stock.pitch:g} mm · {self.view.fps:.0f} FPS · update {state['frame_compute_ms']:.1f} ms")
 
     def toggle_head(self,enabled):
         for item,role in self.tool_items:item.setVisible(enabled or role in ("cutter","shank","neck"))
 
     def collision_clicked(self,item):self.pause();self.seek(item.data(QtCore.Qt.ItemDataRole.UserRole))
+    def chart_seek(self,seconds):self.pause();self.seek(seconds)
     def timeline_changed(self,value):self.pause();self.seek(value*self.program.duration/1000000)
     def seek(self,seconds):
         self.target=min(self.program.duration,max(0.,seconds));self.generation+=1;self.request_frame()
