@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "carvera-voxel-sim"
+version = "0.1.1"
+description = "Continuous swept-volume, 3-axis voxel CNC verification for Carvera"
+requires-python = ">=3.14,<3.15"
+dependencies = ["numpy>=2.3.3,<2.4", "numba>=0.63.1,<0.66"]
+
+[project.optional-dependencies]
+viewer = ["PySide6-Essentials>=6.10,<7", "pyqtgraph>=0.14,<0.15", "PyOpenGL>=3.1.7,<4"]
+test = ["pytest>=8.4,<10"]
+
+[project.scripts]
+carvera-sim = "carvera_sim.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["carvera_sim*"]
+
+[tool.setuptools.package-data]
+carvera_sim = ["data/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

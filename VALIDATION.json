@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-11",
+  "python": "3.14.10",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "automated_tests": {
+    "passed": 80,
+    "failed": 0,
+    "skipped": 0,
+    "execution": "Complete suite on CPython 3.14.10, including Qt timeline widget test",
+    "test_command": "python -m pytest -q",
+    "duration_s": 25.161
+  },
+  "gui": {
+    "platform": "Linux/X11",
+    "native_window_rendered": true,
+    "checked": [
+      "start",
+      "pause",
+      "stop/rewind",
+      "speed change",
+      "timeline click",
+      "time entry",
+      "backward seek",
+      "tool change display",
+      "full-resolution mesh",
+      "head visibility",
+      "orbit",
+      "pan",
+      "zoom",
+      "clean Ctrl+Q shutdown"
+    ],
+    "export_unchanged_by_playback": true,
+    "python": "3.12.14 (original interactive checks)",
+    "python_314_viewer_import_passed": true,
+    "python_314_offscreen_timeline_test_passed": true
+  },
+  "windows": {
+    "native_execution_tested": false,
+    "x64_python_314_dependency_wheels_resolved": true,
+    "ci_matrix_included": [
+      "Windows Python 3.14",
+      "Linux Python 3.14"
+    ],
+    "ci_run_performed": false
+  },
+  "synthetic_benchmark": {
+    "simulation_time_s": 1.3889547310000125,
+    "nominal_job_time_s": 1941.8005650117493,
+    "linearized_segments": 11570,
+    "removed_voxels": 17636640,
+    "collision_count": 0,
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "pitch_mm": 0.1,
+    "stock_mm": [
+      80.0,
+      60.0,
+      12.0
+    ],
+    "grid_bytes": 57600000,
+    "jit_warmup_s": 0.5998232040001312,
+    "parse_s": 0.28929692500014426,
+    "note": "Simulation time excludes JIT, initialization, parsing, UI and file export. Collisions enabled. Nominal CAD is unverified."
+  },
+  "makera_topclamp": {
+    "linearized_segments": 9634,
+    "simulation_time_s": 1.171047187000113,
+    "nominal_job_time_s": 1636.3898399067964,
+    "removed_voxels": 5010708,
+    "collision_count": 0,
+    "status": "incomplete",
+    "python": "3.12.14 (original benchmark)"
+  },
+  "makera_topclamp_configuration": "100 x 100 x 5 mm stock, embedded tool metadata, illustrative machine.template.json with explicitly supplied G28 path; status incomplete. Performance test only, not physical job certification.",
+  "source_commit": "de08a657bdc9c230a094dbdba792acd70bfcdf32",
+  "wheel_build": "carvera_voxel_sim-0.1.1-py3-none-any.whl built successfully with Python 3.14; metadata and package data verified",
+  "package_version": "0.1.1",
+  "dependencies": {
+    "numpy": "2.3.5",
+    "numba": "0.65.1",
+    "llvmlite": "0.47.0",
+    "PySide6-Essentials": "6.12.0",
+    "pyqtgraph": "0.14.0",
+    "PyOpenGL": "3.1.10",
+    "pytest": "9.2.0"
+  },
+  "python_314_migration": {
+    "target": "CPython >=3.14,<3.15; standard GIL-enabled build",
+    "windows_environment": ".venv314",
+    "installed_package_import_passed": true,
+    "pip_check_passed": true,
+    "demo_cli_exit_code": 3,
+    "demo_cli_status": "incomplete (expected for unverified example geometry)",
+    "demo_voxels_identical_to_previous_version": true
+  }
+}

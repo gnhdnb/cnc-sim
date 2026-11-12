@@ -1,0 +1,44 @@
+; Synthetic demo. Stock 30 x 20 x 6 mm; minimum corner (0,0,-6).
+; Start at (0,0,5), T1. Units and coordinates are explicit.
+G21 G90 G17 G94
+T1 M6
+S12000 M3
+G0 X5 Y5 Z5
+G0 Z1
+G1 Z-1 F180
+G1 X25 F600
+G1 Y7
+G1 X5
+G1 Y9
+G1 X25
+G1 Y11
+G1 X5
+G1 Y13
+G1 X25
+G1 Y15
+G1 X5
+G0 Z5
+G0 X5 Y5
+G1 Z-2 F180
+G1 X25 F600
+G1 Y7
+G1 X5
+G1 Y9
+G1 X25
+G1 Y11
+G1 X5
+G1 Y13
+G1 X25
+G1 Y15
+G1 X5
+G0 Z5
+M5
+T2 M6
+S12000 M3
+G0 X12 Y10 Z5
+G1 Z-3 F180
+G3 X18 Y10 I3 J0 F500
+G3 X12 Y10 I-3 J0
+G0 Z5
+M5
+M30

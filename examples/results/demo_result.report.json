@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "simulator_version": "0.1.0",
+  "status": "incomplete",
+  "exit_code": 3,
+  "verification_complete": false,
+  "incomplete_reasons": [
+    "Machine geometry is not marked verified against this physical setup",
+    "T1 geometry/stickout is not marked verified",
+    "T2 geometry/stickout is not marked verified",
+    "M6 return position is unconfirmed; set tool_change_restores_tip only after checking firmware behavior"
+  ],
+  "scope": "Programmed 3-axis machining path; hidden ATC/probe/homing/service motion and cutting physics excluded",
+  "array": {
+    "dtype": "bool",
+    "axis_order": "XYZ",
+    "true": "material remaining",
+    "false": "air",
+    "shape": [
+      300,
+      200,
+      60
+    ],
+    "pitch_mm": 0.1,
+    "origin_min_mm": [
+      0.0,
+      0.0,
+      -6.0
+    ],
+    "stock_dimensions_mm": [
+      30.0,
+      20.0,
+      6.0
+    ],
+    "grid_dimensions_mm": [
+      30.0,
+      20.0,
+      6.0
+    ],
+    "coordinate_rule": "origin_min_mm + (index + 0.5) * pitch_mm",
+    "occupancy_rule": "voxel center inside remaining solid",
+    "bytes": 3600000,
+    "file": "demo_result.npy",
+    "raw_array_sha256": "82c690b664e20c0efe3136068057741b350909011279408fdbf3f35b4185083e"
+  },
+  "removed_voxels": 621656,
+  "remaining_voxels": 2978344,
+  "removed_volume_mm3": 621.6560000000002,
+  "nominal_job_time_s": 35.194261926242916,
+  "simulation_time_s": 0.027021227999739494,
+  "linearized_segments": 88,
+  "collision_margin_mm": 0.0,
+  "collision_count": 0,
+  "collisions": [],
+  "warnings": [
+    "Line 4: M6 service motion excluded; assumes return to the same programmed tip position",
+    "Line 36: M6 service motion excluded; assumes return to the same programmed tip position"
+  ],
+  "machine": {
+    "name": "Carvera Air \u2014 nominal envelopes from Makera simplified CAD",
+    "verified": false,
+    "source": "https://github.com/MakeraInc/CarveraProfiles/blob/de08a657bdc9c230a094dbdba792acd70bfcdf32/Machine_Design_Files/Carvera_Air_Simplified.step",
+    "source_commit": "de08a657bdc9c230a094dbdba792acd70bfcdf32",
+    "notes": "Extracted from Z component of official simplified STEP on 2026-11-11. Cylinders are exact CAD radii; motor and Z plate use conservative bounding boxes. This is not metrology-grade CAD. Confirm actual nose, collar, accessories, stickout, orientation and operating offsets before setting verified=true. Does not model the X gantry, probe, dust shoe, hoses, wiring or machine frame.",
+    "coordinate_derivation": "CAD local spindle center x=-74.0385852576533, z=28.999999999998; lower nose y=201.458967162417. Simulator X=CAD x+74.0385852576533, Y=29-CAD z, Z=CAD y-201.458967162417. Gauge is lower nose face, tip+stickout.",
+    "tool_change_restores_tip": false,
+    "bodies": [
+      {
+        "name": "holder_nose",
+        "role": "holder",
+        "shape": "cylinder",
+        "anchor": "gauge",
+        "z": [
+          0,
+          20
+        ],
+        "radius": 8
+      },
+      {
+        "name": "spindle_nose",
+        "role": "spindle",
+        "shape": "cylinder",
+        "anchor": "gauge",
+        "z": [
+          20,
+          25
+        ],
+        "radius": 16.7899370932549
+      },
+      {
+        "name": "spindle_motor_envelope",
+        "role": "spindle",
+        "shape": "box",
+        "anchor": "gauge",
+        "min": [
+          -31.001,
+          -44,
+          25
+        ],
+        "max": [
+          30.65,
+          29,
+          196.21
+        ]
+      },
+      {
+        "name": "head_plate_envelope",
+        "role": "head",
+        "shape": "box",
+        "anchor": "gauge",
+        "min": [
+          -60,
+          29,
+          26.779
+        ],
+        "max": [
+          59.6,
+          41,
+          199.28
+        ]
+      }
+    ],
+    "fixtures": []
+  },
+  "tools": {
+    "1": {
+      "name": "3 mm flat, DEMO dimensions",
+      "type": "flat",
+      "diameter": 3,
+      "flute_length": 8,
+      "shoulder_length": 8,
+      "shank_diameter": 3.175,
+      "stickout": 22,
+      "verified": false
+    },
+    "2": {
+      "name": "2 mm ball, DEMO dimensions",
+      "type": "ball",
+      "diameter": 2,
+      "flute_length": 8,
+      "shoulder_length": 8,
+      "shank_diameter": 3.175,
+      "stickout": 22,
+      "verified": false
+    }
+  },
+  "events": [
+    {
+      "line": 4,
+      "time_s": 0.0,
+      "kind": "tool_change",
+      "tool": 1
+    },
+    {
+      "line": 36,
+      "time_s": 29.851776695296632,
+      "kind": "tool_change",
+      "tool": 2
+    },
+    {
+      "line": 44,
+      "time_s": 35.194261926242916,
+      "kind": "end"
+    }
+  ],
+  "limits": [
+    "100 um is voxel pitch, not a physical machining-accuracy guarantee",
+    "Sub-voxel features and clearances may be unresolved; set a finer pitch or collision margin",
+    "Motion is nominal; no deflection, runout, backlash, acceleration, corner blending or material forces",
+    "After a reported collision, removal continues as a hypothetical rigid-tool path"
+  ],
+  "input": {
+    "nc_file": "demo.nc",
+    "nc_sha256": "c02c64dc80dbe709948e600ce28e8e48996a35ff2dc87fb25a6f23bead900df4",
+    "initial_tip_mm": [
+      0.0,
+      0.0,
+      5.0
+    ],
+    "initial_tool": 1,
+    "rapid_feed_mm_min": 2400.0,
+    "block_delete": false
+  },
+  "arc_chord_tolerance_mm": 0.005,
+  "profile_chord_tolerance_mm": 0.005,
+  "voxel_center_to_corner_mm": 0.08660254037844387,
+  "jit_warmup_s": 1.4126251379998394
+}

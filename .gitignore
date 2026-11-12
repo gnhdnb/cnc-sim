@@ -1,0 +1,15 @@
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.venv/
+*.npy
+*.npz
+*.report.json
+build/
+dist/
+
+.venv314/
+*.metrics.npy
+benchmark-*.json
+!examples/results/*.npy
+!examples/results/*.report.json

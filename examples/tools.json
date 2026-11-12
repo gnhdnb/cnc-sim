@@ -1,0 +1,9 @@
+{
+  "tools": {
+    "1": {"name":"3 mm flat, DEMO dimensions", "type":"flat", "diameter":3, "flute_length":8, "shoulder_length":8, "shank_diameter":3.175, "stickout":22, "verified":false},
+    "2": {"name":"2 mm ball, DEMO dimensions", "type":"ball", "diameter":2, "flute_length":8, "shoulder_length":8, "shank_diameter":3.175, "stickout":22, "verified":false},
+    "3": {"name":"30 degree V, DEMO dimensions", "type":"v", "diameter":3.175, "tip_diameter":0.1, "angle":30, "flute_length":8, "shoulder_length":8, "shank_diameter":3.175, "stickout":22, "verified":false},
+    "4": {"name":"0.4 mm drill, DEMO dimensions", "type":"drill", "diameter":0.4, "angle":118, "flute_length":6, "shoulder_length":6, "shank_diameter":3.175, "stickout":22, "verified":false},
+    "5": {"name":"Single-form thread cutter, DEMO dimensions", "type":"thread", "diameter":3, "neck_diameter":2, "thread_angle":60, "tooth_height":0.5773502691896257, "teeth":1, "flute_length":1, "shoulder_length":10, "shank_diameter":3.175, "stickout":22, "verified":false}
+  }
+}

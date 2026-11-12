@@ -1,0 +1,14 @@
+{
+  "name":"Carvera/Air measurement template — illustrative dimensions, NOT factory measurements",
+  "verified":false,
+  "notes":"Replace every body dimension and waypoint with measured values. Gauge means the lowest holder face, at tool tip + tool stickout. All coordinates are in the same world frame as stock. These example dimensions do not certify a Carvera or Carvera Air.",
+  "tool_change_restores_tip":false,
+  "max_rpm":24000,
+  "clearance_moves":[{"z":20},{"x":0,"y":0}],
+  "bodies":[
+    {"name":"holder","role":"holder","shape":"frustum","anchor":"gauge","z":[0,8],"radius_bottom":5,"radius_top":8},
+    {"name":"spindle","role":"spindle","shape":"cylinder","anchor":"gauge","z":[8,70],"radius":20},
+    {"name":"head","role":"head","shape":"box","anchor":"gauge","min":[-35,-25,25],"max":[35,45,110]}
+  ],
+  "fixtures":[]
+}
