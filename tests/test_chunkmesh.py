@@ -41,6 +41,7 @@ def test_chunks_equal_voxel_boundary_oracle_without_internal_seams():
     mesher=ChunkMesher(grid,stock,chunk_size=4)
     meshes={key:(v,f) for key,v,f in mesher.update(reset=True)}
     assert mesh_faces(meshes,stock)==expected_faces(grid)
+    assert mesh_faces({'combined':mesher.combined()},stock)==expected_faces(grid)
 
 
 def test_incremental_edits_invalidate_adjacent_chunk_faces():
@@ -53,6 +54,7 @@ def test_incremental_edits_invalidate_adjacent_chunk_faces():
     assert 0<len(edits)<len(meshes)
     for key,v,f in edits:meshes[key]=(v,f)
     assert mesh_faces(meshes,stock)==expected_faces(grid)
+    assert mesh_faces({'combined':mesher.combined()},stock)==expected_faces(grid)
     assert mesher.update()==[]
     # A backward seek/full reset restores all faces exactly.
     grid[:]=True

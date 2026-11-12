@@ -21,8 +21,9 @@ class MetricsCharts(pg.GraphicsLayoutWidget):
         self.units=('mm³/min','mm/min')
         for i,(label,unit,color) in enumerate(zip(self.labels,self.units,('#64c7ff','#ffa766'))):
             plot=self.addPlot(row=i,col=0)
-            plot.setLabel('left',label,units=unit)
-            plot.getAxis('left').setWidth(130)
+            plot.setLabel('left',units=unit)
+            plot.getAxis('left').enableAutoSIPrefix(False)
+            plot.getAxis('left').setWidth(90)
             plot.showGrid(x=True,y=True,alpha=.15)
             plot.setMouseEnabled(x=True,y=False)
             plot.setMenuEnabled(False)

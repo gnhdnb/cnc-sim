@@ -93,6 +93,7 @@ class ChunkMesher:
         self.shape=np.asarray(grid.shape,dtype=np.int64)
         self.chunk_shape=(self.shape+self.chunk_size-1)//self.chunk_size
         self.dirty=set()
+        self.meshes={}
 
     def invalidate_all(self):
         self.dirty=set(itertools.product(*(range(int(n)) for n in self.chunk_shape)))
@@ -114,6 +115,19 @@ class ChunkMesher:
             low=np.array(key)*self.chunk_size
             high=np.minimum(low+self.chunk_size,self.shape)
             vertices,faces=mesh_chunk(self.grid,self.stock,low,high)
+            if len(faces):self.meshes[key]=(vertices,faces)
+            else:self.meshes.pop(key,None)
             updates.append((key,vertices,faces))
         self.dirty.clear()
         return updates
+
+    def combined(self):
+        """Pack cached surfaces into one draw call, without rescanning any voxels."""
+        vertices=np.empty((sum(len(v) for v,_ in self.meshes.values()),3),np.float32)
+        faces=np.empty((sum(len(f) for _,f in self.meshes.values()),3),np.uint32)
+        vo=fo=0
+        for v,f in self.meshes.values():
+            vertices[vo:vo+len(v)]=v
+            faces[fo:fo+len(f)]=f+vo
+            vo+=len(v);fo+=len(f)
+        return vertices,faces

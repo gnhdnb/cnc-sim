@@ -122,6 +122,9 @@ class Worker(threading.Thread):
                 reset=state['reset_stock'] or generation!=previous_generation or stride!=previous_stride
                 if stride==1:
                     updates=chunks.update(state['dirty_bounds'],reset=reset,cancelled=self.stopping.is_set)
+                    # One GPU draw avoids hundreds of per-chunk state changes.
+                    # Only surface arrays are packed; dirty chunks alone read voxels.
+                    updates=[((0,0,0),*chunks.combined())] if updates else []
                     actual_stride=1
                 else:
                     vertices,faces,actual_stride=stock_mesh(self.sim.grid,self.sim.stock,stride)
@@ -142,7 +145,12 @@ class View(gl.GLViewWidget):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.paint_times=deque(maxlen=61)
-        self.frameSwapped.connect(lambda:self.paint_times.append(time.perf_counter()))
+        self.frameSwapped.connect(self.record_swap)
+
+    def record_swap(self):
+        now=time.perf_counter()
+        if self.paint_times and now-self.paint_times[-1]>.5:self.paint_times.clear()
+        self.paint_times.append(now)
 
     @property
     def fps(self):
@@ -198,7 +206,11 @@ class Window(QtWidgets.QMainWindow):
         side_layout.setContentsMargins(0,8,8,0)
         side_layout.addWidget(QtWidgets.QLabel("VERIFICATION"))
         self.details=QtWidgets.QLabel("Computing the final stock and checking collisions.\nThe result file will be saved before playback.")
-        self.details.setWordWrap(True);side_layout.addWidget(self.details)
+        self.details.setWordWrap(True)
+        self.details.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
+        detail_scroll=QtWidgets.QScrollArea();detail_scroll.setWidgetResizable(True)
+        detail_scroll.setWidget(self.details);detail_scroll.setMinimumHeight(110)
+        side_layout.addWidget(detail_scroll,2)
         side_layout.addWidget(QtWidgets.QLabel("COLLISIONS  ·  CLICK TO SEEK"))
         self.collisions=QtWidgets.QListWidget();side_layout.addWidget(self.collisions,1)
         self.collisions.itemClicked.connect(self.collision_clicked)
