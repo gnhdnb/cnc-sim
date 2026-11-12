@@ -522,3 +522,9 @@ architecture, metric definitions, output compatibility and continuation work;
 This is an independent simulator. It is not an official Makera product or a
 machine safety certification. A `clear_in_model` result covers the configured
 geometry and supported nominal NC path only.
+
+## License
+
+The original simulator code and documentation are licensed under the
+[MIT License](LICENSE), copyright (c) 2026 gnhdnb. See [NOTICE](NOTICE) for
+the provenance and separate licensing status of bundled third-party data.

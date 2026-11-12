@@ -1,0 +1,19 @@
+Third-party data attribution
+
+The MIT license in LICENSE covers the original cnc-sim software and
+documentation. It does not grant rights to third-party source material.
+
+cnc_sim/data/tool_catalog.json contains numeric geometry and source metadata
+extracted from the Fusion tool profiles in MakeraInc/CarveraProfiles:
+https://github.com/MakeraInc/CarveraProfiles/tree/de08a657bdc9c230a094dbdba792acd70bfcdf32/CAM_Post_Processors/Fusion360-profiles/Tool%20Files
+
+cnc_sim/data/default_machine.json contains nominal envelopes derived from:
+https://github.com/MakeraInc/CarveraProfiles/blob/de08a657bdc9c230a094dbdba792acd70bfcdf32/Machine_Design_Files/Carvera_Air_Simplified.step
+
+Both sources are pinned to commit de08a657bdc9c230a094dbdba792acd70bfcdf32.
+The original source URLs, numeric geometry, source filenames and derivation
+details remain recorded in these JSON files. The upstream snapshot has no
+root license file; this project does not assert that those source materials
+are MIT-licensed. Any applicable upstream rights remain with their owners.
+
+Runtime and optional dependencies retain their respective licenses.

@@ -1,17 +1,23 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cnc-sim"
 version = "0.3.0"
 description = "Continuous swept-volume, 3-axis voxel CNC simulation and verification"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.14,<3.15"
 dependencies = ["numpy>=2.3.3,<2.4", "numba>=0.63.1,<0.66"]
 
 [project.optional-dependencies]
 viewer = ["PySide6-Essentials>=6.10,<7", "pyqtgraph>=0.14,<0.15", "PyOpenGL>=3.1.7,<4"]
 test = ["pytest>=8.4,<10"]
+
+[project.urls]
+Repository = "https://github.com/gnhdnb/cnc-sim"
+Issues = "https://github.com/gnhdnb/cnc-sim/issues"
 
 [project.scripts]
 cnc-sim = "cnc_sim.cli:main"

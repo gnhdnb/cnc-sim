@@ -30,7 +30,7 @@ Native Linux/Python 3.14 verification reproduced the old rendering by temporaril
 |---|---|
 | Package / runtime | `0.3.0`; `>=3.14,<3.15` |
 | Archive top-level folder | `cnc-sim/` |
-| Git | Local repository, branch `main`, no external remote; `.git` included in source ZIP |
+| Git | Branch `main`; public remote `origin`: https://github.com/gnhdnb/cnc-sim.git; original incremental history preserved |
 | Handover | `HANDOVER.md` in the repository; identical standalone `CNC_SIM_HANDOVER.md` |
 | Validation | `VALIDATION.json`, supporting records under `validation/` |
 | Example export | Regenerated with v2 report and appended metrics; voxel grid exactly matches the original reference |
@@ -188,7 +188,7 @@ There are 14 package Python modules. Qt is imported lazily from the CLI only whe
 | PyQtGraph | `>=0.14,<0.15`, viewer extra | 0.14.0 |
 | PyOpenGL | `>=3.1.7,<4`, viewer extra | 3.1.10 |
 | pytest | `>=8.4,<10`, test extra | 9.2.0 |
-| setuptools | `>=68`, isolated build dependency | Build succeeded; exact build-env version was not recorded |
+| setuptools | `>=77.0.3`, isolated build dependency (raised for SPDX license metadata during GitHub publication) | Build succeeded; exact build-env version was not recorded |
 
 `shiboken6` is Qt's Python/C++ bindings support library. It is pulled in automatically by `PySide6-Essentials`; version 6.12.0 of that package requires exactly `shiboken6==6.12.0`. The user asked what it was after installation; no special Shiboken configuration was needed.
 
@@ -837,7 +837,7 @@ The catalog extraction and CAD-envelope extraction were performed during develop
 
 | Area | Concrete follow-up |
 |---|---|
-| Source control | Local `main` and incremental commits now exist. Set an external remote only when authorized; preserve history when moving to another environment. |
+| Source control | Public repository: https://github.com/gnhdnb/cnc-sim, with `origin` configured locally. Preserve the incremental history when moving to another environment. |
 | Ignore rules | Both `.venv/` and `.venv314/` are ignored; research/dependency environments are outside the repository. Preserve these exclusions. |
 | Test fixtures in Git | Saved `examples/results/*.npy` and `*.report.json` are explicitly unignored and tracked. Keep general job results out of commits unless intentionally added. |
 | Reproducible installs | Consider a tested constraints/lock file while retaining usable package metadata. Current ranges can resolve newer Qt/test dependencies. |
@@ -851,7 +851,7 @@ The catalog extraction and CAD-envelope extraction were performed during develop
 | Reporting | If needed, make travel-limit timestamps exact; they currently identify offending endpoints. |
 | Replay API | If replay will be exposed to external callers, separate visual-state counters from final-report counters. |
 | Output durability | Consider a run ID or stronger two-file publication protocol if consumers require transactional pair updates. |
-| Public distribution | No project `LICENSE` file is present. Establish intended licensing and source-data provenance before publishing a repository/package. |
+| Public distribution | Original code and documentation use the MIT license in `LICENSE`, copyright (c) 2026 gnhdnb. `NOTICE` preserves third-party data attribution and its separate licensing status; the pinned upstream snapshot has no root license file. |
 
 Do not expand to 4/5-axis, GPU simulation, a full machine kinematic graph or material-physics estimation merely to polish the handover. Those are separate architectural changes requiring requirements and validation.
 
