@@ -91,3 +91,21 @@ def test_zero_duration_removal_and_allocation_guard():
     long=Parser().parse('G1 X100 F1')
     with pytest.raises(ValueError,match='samples'):
         Simulator(s,{1:cutter()},max_metric_samples=2).run(long)
+
+
+def test_replay_keeps_export_and_metric_history_unchanged(tmp_path):
+    from carvera_sim.engine import SnapshotCache
+    from carvera_sim.replay import Replay
+    s=Stock([6,4,2],[0,0,-2],.1)
+    p=Parser(start=(-2,2,1)).parse('S12000 M3\nG1 Z-1 F100\nG1 X8 F200\nG0 Z3')
+    sim=Simulator(s,{1:cutter()})
+    cache=SnapshotCache(len(p.moves))
+    report=sim.run(p,snapshots=cache)
+    _,path,report_path=save_result(tmp_path/'replay.npy',sim.grid,report)
+    before=path.read_bytes();before_report=report_path.read_bytes();metrics=sim.metrics.copy()
+    final=sim.grid.copy()
+    replay=Replay(sim,p,cache)
+    for seconds in (p.duration/2,0,p.duration):replay.seek(seconds)
+    np.testing.assert_array_equal(sim.grid,final)
+    np.testing.assert_array_equal(sim.metrics,metrics)
+    assert path.read_bytes()==before and report_path.read_bytes()==before_report

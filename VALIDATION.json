@@ -1,56 +1,84 @@
 {
-  "date": "2026-11-11",
+  "date": "2026-11-12",
+  "package_version": "0.2.0",
   "python": "3.14.10",
   "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
   "automated_tests": {
-    "passed": 80,
+    "passed": 97,
     "failed": 0,
+    "errors": 0,
     "skipped": 0,
-    "execution": "Complete suite on CPython 3.14.10, including Qt timeline widget test",
-    "test_command": "python -m pytest -q",
-    "duration_s": 25.161
+    "duration_s": 9.778,
+    "command": "python -m pytest -q",
+    "junit_file": "validation/tests.xml"
+  },
+  "dependencies": {
+    "numpy": "2.3.5",
+    "numba": "0.65.1",
+    "llvmlite": "0.47.0",
+    "PySide6-Essentials": "6.12.0",
+    "pyqtgraph": "0.14.0",
+    "PyOpenGL": "3.1.10",
+    "pytest": "9.2.0",
+    "shiboken6": "6.12.0"
   },
   "gui": {
     "platform": "Linux/X11",
+    "python": "3.14.10",
     "native_window_rendered": true,
     "checked": [
       "start",
       "pause",
       "stop/rewind",
-      "speed change",
+      "speed selection",
       "timeline click",
-      "time entry",
-      "backward seek",
-      "tool change display",
-      "full-resolution mesh",
+      "chart click",
+      "chart cursor drag",
+      "forward and backward seek",
+      "full-resolution stock",
       "head visibility",
       "orbit",
-      "pan",
-      "zoom",
-      "clean Ctrl+Q shutdown"
+      "Shift+left pan",
+      "wheel zoom",
+      "reset view",
+      "Ctrl+Q close"
     ],
-    "export_unchanged_by_playback": true,
-    "python": "3.12.14 (original interactive checks)",
-    "python_314_viewer_import_passed": true,
-    "python_314_offscreen_timeline_test_passed": true
+    "export_unchanged_by_replay_regression": true,
+    "note": "Export invariance is covered by an automated forward/backward replay test; desktop controls were manually exercised."
   },
-  "windows": {
-    "native_execution_tested": false,
-    "x64_python_314_dependency_wheels_resolved": true,
-    "ci_matrix_included": [
-      "Windows Python 3.14",
-      "Linux Python 3.14"
+  "native_playback": {
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "python": "3.14.10",
+    "grid_shape": [
+      800,
+      600,
+      120
     ],
-    "ci_run_performed": false
+    "opengl": {
+      "vendor": "Mesa",
+      "renderer": "llvmpipe (LLVM 19.1.7, 256 bits)",
+      "version": "4.5 (Compatibility Profile) Mesa 25.0.7-2+deb13u1"
+    },
+    "pitch_mm": 0.1,
+    "display_stride": 1,
+    "speed": 10,
+    "elapsed_s": 9.804608759000075,
+    "playback_frames": 306,
+    "playback_updates_per_second": 31.209812397573675,
+    "viewport_swaps_per_second": 31.209812397573675,
+    "compute_median_ms": 10.286256499512092,
+    "compute_p95_ms": 24.05012624990377,
+    "last_nominal_time_s": 97.66902491999645,
+    "note": "Native Qt/OpenGL window, full voxel detail; excludes initial verification, JIT and initial full mesh"
   },
   "synthetic_benchmark": {
-    "simulation_time_s": 1.3889547310000125,
+    "simulation_time_s": 2.9246368539998002,
     "nominal_job_time_s": 1941.8005650117493,
     "linearized_segments": 11570,
     "removed_voxels": 17636640,
     "collision_count": 0,
     "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
-    "python": "3.12.14",
+    "python": "3.14.10",
     "numpy": "2.3.5",
     "pitch_mm": 0.1,
     "stock_mm": [
@@ -59,39 +87,51 @@
       12.0
     ],
     "grid_bytes": 57600000,
-    "jit_warmup_s": 0.5998232040001312,
-    "parse_s": 0.28929692500014426,
+    "jit_warmup_s": 0.12995501600016723,
+    "parse_s": 0.1758448540003883,
     "note": "Simulation time excludes JIT, initialization, parsing, UI and file export. Collisions enabled. Nominal CAD is unverified."
   },
-  "makera_topclamp": {
-    "linearized_segments": 9634,
-    "simulation_time_s": 1.171047187000113,
-    "nominal_job_time_s": 1636.3898399067964,
-    "removed_voxels": 5010708,
-    "collision_count": 0,
+  "mesh_microbenchmarks_file": "validation/mesh_microbenchmarks.json",
+  "demo": {
     "status": "incomplete",
-    "python": "3.12.14 (original benchmark)"
+    "exit_code": 3,
+    "grid_identical_to_0_1_1": true,
+    "raw_array_sha256": "82c690b664e20c0efe3136068057741b350909011279408fdbf3f35b4185083e",
+    "removed_volume_mm3": 621.6560000000002,
+    "metric_samples": 426,
+    "metrics_bytes": 24282,
+    "peak_removal_mm3_min": 1800.0000000000389,
+    "peak_approach_mm_min": 2400.0,
+    "schema_version": 2,
+    "simulator_version": "0.2.0"
   },
-  "makera_topclamp_configuration": "100 x 100 x 5 mm stock, embedded tool metadata, illustrative machine.template.json with explicitly supplied G28 path; status incomplete. Performance test only, not physical job certification.",
-  "source_commit": "de08a657bdc9c230a094dbdba792acd70bfcdf32",
-  "wheel_build": "carvera_voxel_sim-0.1.1-py3-none-any.whl built successfully with Python 3.14; metadata and package data verified",
-  "package_version": "0.1.1",
-  "dependencies": {
-    "numpy": "2.3.5",
-    "numba": "0.65.1",
-    "llvmlite": "0.47.0",
-    "PySide6-Essentials": "6.12.0",
-    "pyqtgraph": "0.14.0",
-    "PyOpenGL": "3.1.10",
-    "pytest": "9.2.0"
+  "windows": {
+    "native_execution_tested": false,
+    "x64_python_314_dependency_wheels_resolved_in_0_1_1": true,
+    "new_external_dependencies_added": false,
+    "ci_matrix_included": [
+      "Windows Python 3.14",
+      "Linux Python 3.14"
+    ],
+    "ci_run_performed": false
   },
-  "python_314_migration": {
-    "target": "CPython >=3.14,<3.15; standard GIL-enabled build",
-    "windows_environment": ".venv314",
-    "installed_package_import_passed": true,
-    "pip_check_passed": true,
-    "demo_cli_exit_code": 3,
-    "demo_cli_status": "incomplete (expected for unverified example geometry)",
-    "demo_voxels_identical_to_previous_version": true
-  }
+  "packaging": {
+    "wheel": "carvera_voxel_sim-0.2.0-py3-none-any.whl",
+    "build_succeeded": true,
+    "installed_wheel_imports_passed": true,
+    "package_data_checked": true,
+    "dependency_check_passed": true
+  },
+  "git": {
+    "branch": "main",
+    "external_remote": null,
+    "baseline_commit": "133f72e",
+    "metrics_commit": "1c474d5",
+    "chunk_meshing_commit": "c44ac3d",
+    "charts_playback_commit": "321d798",
+    "batch_rendering_commit": "84291a3",
+    "note": "The final release documentation/version commit follows these; use git log for its hash."
+  },
+  "makera_source_commit": "de08a657bdc9c230a094dbdba792acd70bfcdf32",
+  "historical_validation": "validation/history_0_1_1.json"
 }

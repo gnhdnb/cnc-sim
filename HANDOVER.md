@@ -1,42 +1,53 @@
 # Carvera voxel simulator — engineering handover
 
-**Snapshot:** 11 November 2026 · **package:** `carvera-voxel-sim` 0.1.1 · **runtime:** standard, GIL-enabled, 64-bit CPython 3.14.
+**Snapshot:** 12 November 2026 · **package:** `carvera-voxel-sim` 0.2.0 · **runtime:** standard, GIL-enabled, 64-bit CPython 3.14.
 
-This document describes the delivered implementation, its design rationale, the evidence collected, and the work that remains. It is intended to let another agent continue without the original conversation. Source references and function names refer to the 0.1.1 archive identified below. Decisions are implementation choices, not claims that the model reproduces every behavior of a real controller.
+This document describes the delivered implementation, its design rationale, the evidence collected, and the work that remains. It is intended to let another agent continue without the original conversation. Source references and function names refer to the 0.2.0 repository/archive identified below. Decisions are implementation choices, not claims that the model reproduces every behavior of a real controller.
 
 ## 1. Start here
 
-The working baseline is implemented and packaged. It accepts a three-axis NC program and rectangular stock, simulates material removal on a full three-dimensional voxel grid, checks configured machine/tool/fixture geometry, exports a NumPy array and JSON report, and optionally opens a native playback window.
+The simulator accepts three-axis NC and rectangular stock, removes material from a true 3D voxel array, checks configured collisions, saves final stock plus dynamic diagnostics, and opens an optional native Qt/OpenGL playback window. Python remains **standard x64 CPython 3.14**.
 
-**The main unfinished acceptance work is native Windows execution and verification against the user's physical machine/tool setup.** The supplied machine model is a nominal **Carvera Air** model, not a measured assembly or a Carvera C1 model. The bundled catalog is not an exhaustive export of the proprietary Makera Studio database. These distinctions must survive future changes and product claims.
+The latest requested work is implemented in **0.2.0**: local Git with incremental commits; excavation rate (mm³/min); positive stock-normal approach speed (mm/min) within 20 mm; both metrics in the result NPY and linked charts above the timeline; incremental full-resolution rendering; and this updated handover.
 
-The latest user-directed change was to target Python 3.14. All 80 existing tests passed on CPython 3.14.10 on Linux after that migration. Windows x64 dependency wheels were downloaded successfully. The native Windows application has not been run here.
+**97 tests passed** on Linux/Python 3.14.10. Native desktop playback measured **31.21 FPS** on an 800 × 600 × 120 grid (57.6 million 0.1 mm voxels) at 10× playback using Mesa llvmpipe software OpenGL. This excludes verification, initial meshing and arbitrary seeks. The reproducible headless raster benchmark, including metrics and collisions, took **2.92 s** for a nominal **1,941.80 s** job.
 
-### Delivered source
+Native Windows execution and physical setup acceptance remain unfinished. The default is nominal, unverified **Carvera Air** geometry. The 124-tool catalog is not an exhaustive proprietary Makera Studio database export. Preserve these distinctions.
+
+### Delivered source and repository
 
 [Download carvera-voxel-sim.zip](https://chatgpt.com/library?file_id=libfile_fde3_f-ccf424dfa2388191b14add94ab57380c_e95ac02493bc8191a8d2024072df5f9a&account_id=personal)
 
-| Property | Value at handover |
+| Property | Current value |
 |---|---|
-| Source package version | `0.1.1` |
-| Archive filename | `carvera-voxel-sim.zip` |
-| Archive bytes | 79,991 |
-| Archive files | 32 |
-| Archive SHA-256 | `045690f5fb56510ddcb94469d7e79831c3476b75853232d3955a545afd7a677f` |
+| Package / runtime | `0.2.0`; `>=3.14,<3.15` |
 | Archive top-level folder | `carvera-voxel-sim/` |
-| Runtime requirement | `>=3.14,<3.15` |
-| Source-control state | No Git repository was created for the simulator; a CI workflow is included |
+| Git | Local repository, branch `main`, no external remote; `.git` included in source ZIP |
+| Handover | `HANDOVER.md` in the repository; identical standalone `CARVERA_SIM_HANDOVER.md` |
+| Validation | `VALIDATION.json`, supporting records under `validation/` |
+| Example export | Regenerated with v2 report and appended metrics; voxel grid exactly matches the original reference |
 
-The archive and local project files were compared byte-for-byte while preparing this handover and matched. This handover is a separate companion document; the source archive was not changed to add it. If the archive is updated later, its checksum and version above describe this snapshot only.
+Git history is the authoritative change record. Run `git status --short` and `git log --oneline` after extraction. No dependency environments, downloaded wheels, credentials or temporary research trees are included in the archive.
 
-### Suggested first actions for the next agent
+| Commit | Change boundary |
+|---|---|
+| `133f72e` | Imported delivered Python 3.14 baseline and previous handover |
+| `1c474d5` | Dynamic metrics, sampling, compatible NPY stream and regression tests |
+| `c44ac3d` | Incremental full-resolution chunk meshing and boundary oracle tests |
+| `321d798` | Linked charts and incremental desktop playback |
+| `84291a3` | Single-draw stock batching, layout fixes and native benchmark script |
+| Following release commit | Version 0.2.0, final regression/evidence, refreshed example and documentation; obtain hash with `git log` |
 
-1. Obtain the archive, read `README.md` and `VALIDATION.json`, and inspect `pyproject.toml`.
-2. On native Windows, install standard x64 Python 3.14 and run `setup_windows.cmd`, then `demo_viewer.cmd`.
-3. Run the 80-test suite and the deliberate-collision example. Record the actual OS, Python and package versions.
-4. Obtain the actual tool assignments, installed stickouts, work offsets, fixture positions and initial tool-tip position before attempting to verify a real job.
-5. Verify the nominal Air geometry and firmware-specific G28/M6 behavior before treating a report as complete.
-6. Make any further work against this baseline; preserve the strict parsing, collision chronology and output contracts described below.
+The import came from the previous 79,991-byte 0.1.1 ZIP, SHA-256 `045690f5fb56510ddcb94469d7e79831c3476b75853232d3955a545afd7a677f`. That checksum describes the **old import only**, not this ZIP. Do not put a self-referential current archive hash inside a document included in that archive.
+
+### First actions for the next agent
+
+1. Read this handover, `README.md`, `VALIDATION.json` and `git log`.
+2. On native Windows, use standard x64 Python 3.14; run `setup_windows.cmd`, `demo_viewer.cmd`, and all tests.
+3. Run `scripts/benchmark_playback.py --seconds 10 --speed 10 --output playback.json` on the user's actual GPU/driver. Measure frame rate and initial/seek latency separately.
+4. Inspect new metrics on a real NC sample. Confirm the explicitly defined **voxel-face** normal and interval-peak approach behavior meet the intended diagnostics; do not silently replace it with total feed or distance to the original stock bounding box.
+5. Obtain measured tool/stickout, fixtures, start position, offsets and exact G28/M6 firmware behavior before treating physical job verification as complete.
+6. Continue in small Git commits; preserve parsing, collision chronology, NPY compatibility and export immutability.
 
 ## 2. User goal and scope
 
@@ -51,7 +62,7 @@ The original request was a Python voxel **three-axis Carvera CNC simulator** wit
 - Enough speed for automated agent verification.
 - Windows operation.
 
-The user subsequently required **Python 3.14**. Keep that as the current target, not the earlier Python 3.12 setup.
+The user subsequently required **Python 3.14**, then requested this 0.2.0 iteration: create Git history, add the two dynamic metrics and charts, make full-resolution playback usable in real time, and update the handover. Their purpose is to spot plunges and fast approaches that can cause a hit when real motion is imperfect. Do not add guessed material-specific danger thresholds or claim that a geometric diagnostic models those imperfections. They prefer incremental implementation and verified numbers, with limitations stated plainly.
 
 Relevant workshop context: the user's machine is a **Carvera Air**, and they use community controller/firmware. They also do four-axis work, but the requested simulator is explicitly three-axis. Rotary axes are currently rejected. Do not infer that four-axis support exists because the user owns that accessory.
 
@@ -83,11 +94,15 @@ This was an explicit engineering interpretation of the resolution requirement. A
 | M6 | Tool state changes plus optionally supplied return waypoints | Hidden service/probe/ATC movement is excluded. Default return-position assumption is reported as incomplete. |
 | Tool identification | Explicit NC T-number mapping, optional catalog lookup or supported NC metadata | Catalog IDs and job tool slots are different concepts. Names alone cannot prove installed geometry. |
 | Verification status | Separate collision, incomplete-model and clear-in-model outcomes | Zero detected collisions must not silently imply verified geometry. |
-| Result format | Plain `.npy` plus adjacent JSON report | Easy for agents to memory-map and inspect without the GUI. Geometry metadata is in JSON, not embedded in the ndarray. |
+| Result format | Two consecutive numeric NPY arrays in one file: bool XYZ grid, then structured metrics; adjacent schema-v2 JSON | Existing `np.load(path)` and memory maps still return the grid. Helpers read the appended metrics without loading the grid. No pickle/object payload. |
 | File writes | Individually atomic NPY and JSON replacement, raw-array hash | Avoids partially written individual files; the pair is not a two-file transaction. |
 | UI workflow | Compute and save final result first; then replay | Playback does not overwrite or corrupt the final exported result. |
 | Seeking | Bounded compressed checkpoints plus replay | Deterministic backward seeking without storing a full grid for every frame. |
-| Display geometry | Greedy voxel boundary mesh, optional max-pooling | Keeps display work separate from simulation accuracy. Coarse display can hide small cavities. |
+| Display geometry | Cached greedy surfaces for 64³ chunks; invalidate cutting bounds plus one-cell halo; pack surfaces into one GPU draw | Full resolution is default and never silently coarsens. Avoids whole-grid scans and per-chunk draw overhead during playback. Arbitrary seeks still rebuild. |
+| Removal metric | Actual cleared voxel count × pitch³ × 60 / interval duration | Captures actual engagement and zero on noncutting moves; interval mean, not cutting force. |
+| Approach metric | Largest inward velocity component toward a remaining-stock voxel face within 20 mm of the rotating cutter envelope | Six face normals, including undercut ceilings. Explicitly not a smooth-normal estimator; excludes fixtures/head from this diagnostic. |
+| Sampling | At most 0.1 s and 1 mm per interval; start/mid/end approach probes before interval removal | Bounded diagnostic sampling cost and useful peaks; not a mathematically exact continuous peak bound. |
+| Charts | Precomputed immutable metric history with synchronized seek cursors | Playback speed does not rescale physical metrics; peak-preserving display reduction does not modify saved samples. |
 | Python migration | 0.1.1 targets 3.14 and uses `.venv314` in Windows launchers | Makes the requested runtime explicit and avoids reusing an old `.venv` interpreter. |
 | Dependency policy | Bounded version ranges, tested versions recorded | Installation is convenient, but it is not fully locked/reproducible across future releases. |
 
@@ -105,9 +120,13 @@ flowchart TD
     M --> E
     G --> E
     E --> O["Final NPY and JSON report"]
+    E --> D["Immutable metric table"]
+    D --> O
+    D --> H["Metric charts"]
     E --> C["Compressed checkpoints"]
-    C --> R["Replay and mesh generation"]
+    C --> R["Replay and dirty chunk meshes"]
     R --> W["Qt/OpenGL window"]
+    H --> W
 ```
 
 | File | Responsibilities and primary entry points |
@@ -117,8 +136,11 @@ flowchart TD
 | `carvera_sim/tools.py` | `Tool`, `Body`, `make_tool()`, `make_body()`, `profile_frusta()`, `load_tools()`, `embedded_tools()`: cutter and assembly geometry. |
 | `carvera_sim/catalog.py` | `catalog()`, `resolve_tool_spec()`: package-resource loading and explicit catalog lookup. |
 | `carvera_sim/kernels.py` | Continuous sweep/removal/contact routines and numeric interval/quadratic helpers. |
-| `carvera_sim/engine.py` | `Stock`, `Machine`, `Simulator`, `SnapshotCache`, `save_result()`, `warmup()`: orchestration, collision reports, checkpoints and export. |
+| `carvera_sim/engine.py` | `Stock`, `Machine`, `Simulator`, `SimulationReport`, `SnapshotCache`, `save_result()`, `load_metrics()`, `load_result()`, `warmup()`: simulation, sampled metrics, collisions, checkpoints and two-array export. |
 | `carvera_sim/replay.py` | `Replay.seek()`, `Replay.part()`: GUI-independent, fractional, bidirectional replay. |
+| `carvera_sim/metrics.py` | `METRIC_DTYPE`, `sample_count()`, `normal_approach()`, `has_stock_ahead()`, `metric_summary()`: sample schema and six-direction stock approach queries. |
+| `carvera_sim/chunkmesh.py` | `ChunkMesher`, `mesh_chunk()`, `chunk_mesh_kernel()`, `cutting_bounds()`: dirty chunks, seam ownership, cached surfaces and single-draw packing. |
+| `carvera_sim/charts.py` | `MetricsCharts`: two linked plots, cursor/time synchronization, click and drag seek signals. |
 | `carvera_sim/mesh.py` | `stock_mesh()`, `greedy_mesh()`, `pooled()`, `frusta_mesh()`, `boxes_mesh()`: rendering geometry only. |
 | `carvera_sim/viewer.py` | `Worker`, `Signals`, `SeekSlider`, `View`, `Window`, `launch()`: native desktop UI and asynchronous preparation/replay. |
 | `carvera_sim/__init__.py` | Package `__version__`. Keep it aligned with `pyproject.toml`. |
@@ -129,14 +151,15 @@ flowchart TD
 | `examples/machine.template.json` | Illustrative machine and G28 configuration, not factory data. |
 | `examples/demo.nc` | Two-tool pocket/circular-feature demonstration. |
 | `examples/collision.nc` | Deliberate rapid-through-stock program. |
-| `examples/results/` | Saved sample NPY and report from 0.1.0, retained as a regression reference. |
-| `scripts/benchmark.py` | Reproducible synthetic raster benchmark with collisions enabled. |
-| `tests/` | Five test modules; 80 test cases after parametrization. |
+| `examples/results/` | Current 0.2.0 sample NPY/report, with original voxel geometry preserved exactly and 426 appended metric rows. |
+| `scripts/benchmark.py` | Reproducible synthetic raster benchmark with collisions and metrics enabled. |
+| `scripts/benchmark_playback.py` | Native Qt/OpenGL benchmark: actual swaps, delivered frames, worker compute latency, GL renderer, display pitch and speed. Optional `--quit-after`; otherwise leaves window open for inspection. |
+| `tests/` | Seven test modules; 97 test cases after parametrization. |
 | `.github/workflows/tests.yml` | Windows/Linux Python 3.14 matrix; tests and viewer imports. Not run on GitHub in this session. |
 | `setup_windows.cmd`, `demo_viewer.cmd` | Windows bootstrap and demonstration; CRLF line endings. |
-| `README.md`, `VALIDATION.json` | User-facing manual and recorded validation evidence. |
+| `README.md`, `HANDOVER.md`, `VALIDATION.json`, `validation/` | User manual, current engineering context, tests/performance and explicitly labeled historical evidence. |
 
-There are 11 package Python modules. Qt is imported lazily from the CLI only when `--visualize` is requested. The headless engine does not require the viewer extra.
+There are 14 package Python modules. Qt is imported lazily from the CLI only when `--visualize` is requested. The headless engine does not require the viewer extra.
 
 ## 5. Runtime, installation and migration history
 
@@ -216,7 +239,10 @@ A 0.1.1 wheel was built and inspected for `Requires-Python` and packaged JSON re
 | `--block-delete` | Off; `/` blocks execute unless flag is supplied |
 | `--json` | Final JSON to stdout; progress to stderr; incompatible with `--visualize` |
 | `--quiet` | Suppresses progress; use `--json --quiet` for agents |
-| `--visualize` | Opens optional native viewer |
+| `--metrics-period` | `0.1` s maximum diagnostic interval duration |
+| `--metrics-distance` | `1.0` mm maximum diagnostic interval travel |
+| `--max-metric-samples` | `2,000,000`; rejects excessive table allocation |
+| `--visualize` | Opens optional native viewer with charts; full-resolution display by default |
 | `--list-tools` | Prints bundled catalog and exits without requiring a job |
 
 CLI arc/profile tolerances must be positive and at most half the voxel pitch. The lower-level API does not reproduce every CLI guard automatically.
@@ -239,7 +265,7 @@ Work offsets map G54–G59 origins into this frame. G54 initially exists at `(0,
 
 ### Files and report status
 
-`result.npy` contains `numpy.bool_`: **True = material remains**, **False = air**. `result.report.json` supplies shape, pitch, origin, original stock dimensions, hashes, model configuration, warnings, timings, collisions and incomplete reasons. The report schema is currently version 1.
+The first NPY record in `result.npy` contains `numpy.bool_`: **True = material remains**, **False = air**. The second record is a one-dimensional structured numeric metrics table. `result.report.json` supplies shape, pitch, origin, original stock dimensions, both raw-array hashes, model configuration, warnings, timings, collisions, incomplete reasons and metric semantics. The overall report schema is **2**; the nested metric schema is **1**.
 
 | Exit code | Status/meaning |
 |---|---|
@@ -255,7 +281,54 @@ The GUI returns the final report's exit code after closing. Closing before prepa
 
 A failed new run can leave an older completed output at the requested path. Agents must check the current process exit code, the report's NC SHA-256 and the array hash instead of consuming a pre-existing file blindly. Prefer separate output paths per job/run when integrating into automation.
 
-`save_result()` writes the array in 8 MiB chunks, then the JSON; each file uses a temporary file and `os.replace`. The two replacements are not transactional as a pair. `array.raw_array_sha256` hashes the C-order bool bytes, not the NPY header or whole file. `input.nc_sha256` hashes the original NC bytes, including any BOM.
+`save_result()` writes the bool grid in 8 MiB chunks to a temporary NPY, closes its memory map, appends the second numeric NPY record with `np.save(..., allow_pickle=False)`, then replaces the destination. JSON is written/replaced separately. The pair is not transactional. `array.raw_array_sha256` hashes only C-order bool bytes; `metrics.raw_array_sha256` hashes only packed structured-row bytes. Neither includes NPY headers. `metrics.npy_header_offset_bytes` points to the second header; `npy_array_index` is 1. `input.nc_sha256` hashes the original NC bytes, including any BOM.
+
+`Simulator.run()` returns `SimulationReport`, a JSON-serializable dict subclass with a `.metrics` ndarray attribute. `save_result()` uses that attribute automatically. Converting the report to a plain `dict` loses the attached array; pass `metrics=sim.metrics` explicitly then. A nonempty metrics summary with missing data raises instead of silently dropping the samples. Directly supplied arrays must have exactly `METRIC_DTYPE` and one dimension.
+
+`load_metrics(path)` reads the first header and seeks over the bool payload without loading it. It returns an empty typed table for a legacy stock-only file and rejects malformed stock headers/truncated payloads or unexpected metric dtype. `load_result(path, mmap_mode='r')` returns `(stock, metrics)`. Both are numeric; never enable pickle. Third-party readers that require EOF immediately after a single NPY record may need adapting; NumPy's normal first-array and sequential-stream readers are supported.
+
+### Dynamic metric definition and sampling
+
+`METRIC_DTYPE` is packed, 57 bytes per row:
+
+| Field | Dtype | Meaning |
+|---|---|---|
+| `t_start_s`, `t_end_s` | `<f8` each | Nominal interval start/end, seconds |
+| `line`, `tool` | `<i8` each | Source NC line and T number |
+| `removed_mm3` | `<f8` | Actually cleared voxel count × pitch³ |
+| `removal_rate_mm3_min` | `<f8` | `removed_mm3 * 60 / duration_s` |
+| `approach_speed_mm_min` | `<f8` | Maximum sampled positive stock-normal approach |
+| `rapid` | `?` | G0 flag |
+
+For each parsed `Move`, `sample_count()` takes the maximum of 1, ceiling(duration / period), and ceiling(length / distance), with a small floating-point ceiling guard. All intervals remain continuous analytic sweeps, not point stamps. Default bounds are 0.1 s and 1 mm; each move keeps its source line, tool, spindle state and exact nominal timing. `Simulator.run()` preallocates the table and checks the sample-count cap before allocating it. Two million rows use 114,000,000 bytes (~108.72 MiB), separately from stock and mesh/checkpoint storage.
+
+For an interval, velocity is the source segment delta × 60 / source duration. `normal_approach()` tests moving axes in descending absolute velocity order, stopping at the first with stock ahead. It sweeps the actual cutting frusta along that signed face-normal direction by 20 mm, with half a voxel of axial allowance to account for the front voxel face. Other coordinates remain unchanged. The transverse cutter projection is centre-sampled, matching the solid representation. The metric is the corresponding positive component magnitude; if no moving axis has stock ahead within the range, it is zero.
+
+The interval value is the maximum of probes at start, midpoint and end against **remaining stock before that interval is cut**. Then `Simulator.apply(part)` checks collisions and removes material, returning the newly cleared voxel count. This order sees an impending approach before the interval excavates the target. Collision duplicate suppression remains in the existing engine. Checkpoints are still indexed by original parsed moves, not metric subintervals.
+
+Examples: a flat-stock diagonal velocity `(300, 0, -100)` above its top gives 100 mm/min if the top is in range. Pure horizontal travel above the top gives zero. Moving upward into an undercut roof can be positive. A deep pocket floor is measured at its actual remaining level, not original Z=0. Tangential/retreating motion is zero when no other stock is encountered in the query direction.
+
+Limitations that must remain explicit:
+
+- These are **axis-aligned voxel-face normals**, not fitted normals on a curved/sloping surface. Staircase effects can change which component is selected.
+- Only the rotating cutter envelope and remaining stock are used. Fixtures, shank, holder and head use separate collision checks; this is not their proximity rate.
+- An interval crossing the 20 mm boundary can have a nonzero peak although its start is farther than 20 mm away. At each probe the range test applies; the stored interval peak is not a continuously gated function.
+- Start/mid/end probes do not prove the exact continuous peak; decrease period/travel for small transients. Removal rate is an interval **mean** with voxel quantization, not instantaneous chip engagement.
+- A zero-duration interval that removes initial overlapping material retains volume but gets `NaN` rate; summary counts undefined samples. Motion with zero duration has no inferred finite approach velocity. JSON itself remains finite/strict.
+- Nominal segment velocity is used. Acceleration, backlash, vibration, force, material, finite-flute engagement and spindle ramp are not inferred. No automatic danger threshold was chosen.
+
+Read the two metrics separately:
+
+```python
+from carvera_sim.engine import load_result
+stock, metrics = load_result('result.npy')
+rate = metrics['removal_rate_mm3_min']
+approach = metrics['approach_speed_mm_min']
+interval_start = metrics['t_start_s']
+```
+
+With NumPy alone, open the file once and call `np.load(stream, allow_pickle=False)` twice. A separate `.npz`, object dictionary or extra sidecar `.metrics.npy` is **not** the current storage contract.
+
 
 ## 7. Tool model and catalog
 
@@ -490,22 +563,35 @@ Requests use a condition variable and one pending slot: a newer request replaces
 
 **Important API caveat:** replay mutates the simulator's working grid and some counters. The saved report/array remain the authoritative final result. Do not call `Simulator.report()` after arbitrary replay and treat it as a fresh final verification report. Likewise, a user-supplied `grid` to `Simulator` supplies storage; construction/reset initializes stock and does not load a previous machining result as initial material.
 
-### Meshes
+### Full-resolution chunk surfaces and batching
 
-`stock_mesh()` extracts the boundary of the entire volumetric grid, including internal exposed surfaces and undercuts. Greedy meshing merges coplanar voxel faces. Auto detail chooses a stride so the largest dimension is approximately 220 display cells. Coarsening uses max-pooling: any occupied fine voxel makes the coarse cell occupied.
+The old whole-grid `stock_mesh()` path scanned the entire bool array every frame. On 800 × 600 × 120 voxels, a simple pocket took a median **896.49 ms** per mesh despite only 28 triangles. That explains the user's approximately 1 FPS observation: voxel scanning dominated even when visible geometry was small.
 
-There is a 400,000-quad guard. If a mesh overflows, the renderer retries at a coarser stride instead of truncating geometry silently. Even a full-resolution request can therefore fall back; the actual display pitch is shown. Display vertices use float32; numeric simulation remains float64. Very large path displays are decimated, but simulated moves are not.
+Full-resolution mode now uses `ChunkMesher` with **64-voxel chunk edges**. `Replay.seek()` returns cutting bounds only when `Simulator.apply(check=False)` actually removed voxels, plus a `reset_stock` flag for a restored state. Bounds include the entire swept cutter envelope. Dirty marking expands by one voxel to invalidate newly exposed neighbouring chunk faces. Rapids, air cuts and stationary visual updates need no stock remesh when no material changes.
 
-### Controls
+Each chunk reads neighbouring occupancy across its border. A face belongs to the chunk containing the occupied cell; artificial internal walls and duplicate boundary faces are not emitted. `tests/test_chunkmesh.py` compares the complete exposed face set with an independent voxel-neighbour oracle on randomized 3D solids, chunk-border edits, reset and combined-mesh packing.
+
+`mesh_chunk()` starts with a 1,024-quad buffer and doubles capacity on overflow. It returns compact owned buffers and **does not downsample**. Cached arrays use float32 vertices and uint32 triangle indices. `ChunkMesher.combined()` packs cached surface arrays with adjusted triangle offsets; it never rescans voxels. Worker emits one stock mesh update, producing one stock `GLMeshItem`/GPU draw. This extra batching raised the native benchmark from about 22 FPS with separate chunk items to approximately 31 FPS. Merely reducing mesh CPU time did not suffice.
+
+A representative one-chunk edit measured **3.36 ms** median / **3.62 ms** p95 for meshing alone. This is not the end-to-end desktop frame rate: a frame can dirty several chunks and includes replay, packing, Qt, chart updates, normal calculation and GPU upload/render.
+
+Worker resets all chunks when replay restored stock, seek generation changed, or display stride changed. Generation reset is necessary because the GUI can discard an in-flight stale frame while the worker cache has already advanced. Arbitrary seeks and initial meshing are still roughly one-second operations for this benchmark. The UI remains on its own thread, but closing can wait for a current kernel or chunk; cancellation is checked between chunks.
+
+Optional 2×/4× previews retain the old max-pooled whole-grid mesher and its 400,000-quad fallback behavior. Those explicitly coarse modes can hide small cavities. **Full resolution defaults to stride 1 and never invokes that fallback.** Display path decimation is independent of actual simulated moves. No GPU simulation backend or loss of full XYZ stock resolution was introduced.
+
+### Charts and controls
+
+`MetricsCharts` is a PyQtGraph `GraphicsLayoutWidget` with two linked time axes above the timeline. Values come from the precomputed immutable table, not mutable replay counters. The displayed curve is a step per interval; automatic peak-preserving point reduction and clipping reduce screen drawing only. Left axes display explicit mm³/min and mm/min without SI prefix substitution. Shared cursors show displayed time. Clicking a plot or dragging a cursor pauses and seeks; the exact-time spinbox and collision list still work.
 
 - Start, Pause and Stop; Stop rewinds to zero after preparation.
-- Speeds: 0.1, 0.25, 0.5, 1, 2, 5, 10, 25, 50, 100 and 250×; default 10×.
-- Click/drag timeline, exact time spinbox, collision-click seeking.
+- Speeds: 0.1, 0.25, 0.5, 1, 2, 5, 10, 25, 50, 100 and 250×; default 10×. Speed changes playback time, not metric units/values.
+- Click/drag timeline, chart seeking, exact-time spinbox, collision-click seeking.
 - Left drag orbit; right/middle drag or Shift+left drag pan; wheel zoom.
 - Space play/pause, Home stop/rewind, Ctrl+Q close.
-- Auto/full/2×/4× display detail, head visibility, path visibility, reset camera.
+- Full-resolution/2×/4× detail, head and path visibility, reset camera.
+- Scrollable verification details prevent longer incomplete-reason lists from being clipped.
 
-`SeekSlider` was introduced because the ordinary slider click behavior did not provide direct timeline seeking. It has a Qt mouse-event regression test. A nominal 33 ms UI timer does not imply the numerical renderer guarantees 30 FPS for every stock.
+A 33 ms timer requests nominally 30 FPS. `View` measures actual `frameSwapped` events over recent frames, clearing its history after a pause gap. The status includes measured FPS and worker compute milliseconds. This is a useful observation, not a guarantee for every cutter, stock complexity, speed or driver.
 
 ## 12. Accuracy, memory and performance limits
 
@@ -529,7 +615,15 @@ Halving pitch multiplies dense grid size by approximately eight. `--memmap` redu
 
 The CLI's two-billion-voxel guard is not applied automatically by direct `Stock`/`Simulator` API use. Large repeated or finely linearized programs are also held as Python `Move` objects in memory; there is no streaming NC executor.
 
-### Recorded performance, with collision checking enabled
+### Current 0.2.0 performance
+
+`validation/native_playback.json` records an actual native window on Linux/X11, Python 3.14.10, Mesa llvmpipe (LLVM 19.1.7, 256 bits), OpenGL 4.5 / Mesa 25.0.7. The stock is 80 × 60 × 12 mm at 0.1 mm, full display stride 1, head and path visible, playback 10×. Over 9.805 seconds, 306 playback updates and 306 viewport swaps yielded **31.21 FPS**. Worker compute median was **10.29 ms**, p95 **24.05 ms**. This measures continuous playback after initial preparation, not arbitrary-seek latency or native Windows performance.
+
+`validation/headless_benchmark.json` records the existing 11,570-segment raster with dynamic metrics enabled: **2.9246 s** simulation, **1,941.8006 s** nominal time, **17,636,640** removed voxels, zero collisions. JIT/cache warmup was 0.1300 s and parsing 0.1758 s. Simulation timing excludes initialization, parsing, warmup, export and UI. Tests were also running on the shared development host; treat this as an observation, not a controlled CPU comparison.
+
+To reproduce native playback, run `python scripts/benchmark_playback.py --seconds 10 --speed 10 --output playback.json`. Default behavior leaves the window open for manual interaction; `--quit-after` closes it. The script records actual swaps separately from worker frames and obtains the active OpenGL renderer. It adds an export-hash equality result after window closure; an open-window report may not yet contain that field. Automated replay/export invariance has a separate regression test.
+
+### Historical performance before metrics, with collision checking enabled
 
 | Benchmark | Segments | Grid voxels | Simulation loop time |
 |---|---:|---:|---:|
@@ -552,24 +646,23 @@ Report current results separately rather than relabeling old benchmark numbers a
 
 ## 13. Validation evidence and regression expectations
 
-### Current Python 3.14 validation
+### Current Python 3.14 validation (0.2.0)
 
-- CPython **3.14.10**, x64 Linux, standard build.
-- **80 passed, 0 failed, 0 skipped**, full suite; recorded duration **25.161 s**.
-- Installed package imports identify version 0.1.1.
-- `from carvera_sim.viewer import Window` succeeds.
-- `pip check` reports no broken requirements.
-- Windows x64 binary wheels resolved/downloaded for NumPy, Numba, llvmlite, PySide6 Essentials, Shiboken6 and the remaining viewer/test dependencies.
-- A 0.1.1 wheel built successfully; Python requirement and bundled catalog resources inspected.
-- Installed-package demo CLI run returned exit 3 as expected for unverified geometry; output was exactly equal to the previous sample ndarray.
+- CPython **3.14.10**, standard x64 Linux.
+- **97 passed, 0 failed, 0 errors, 0 skipped**; final full-suite JUnit duration **9.778 s**.
+- 0.2.0 wheel built, installed into the Python 3.14 environment, imported outside the source tree, and checked for packaged catalog data.
+- Installed viewer import and dependency consistency check passed.
+- Updated demo CLI: expected `incomplete` / exit 3; bool grid byte-identical to the previous export; 426 metric rows, 621.656 mm³ total removal, peak rate 1,800 mm³/min, peak approach 2,400 mm/min.
+- Deliberate collision CLI: expected exit 2.
+- Replay regression verifies that forward/backward seeking restores final geometry and leaves both complete exported NPY bytes, JSON bytes and in-memory metric history unchanged.
+- Native Python 3.14 desktop checks: start/pause/stop, speed selection, timeline and chart click, chart cursor drag, forward/backward seek, full-resolution geometry, head visibility, orbit, Shift+left pan, wheel zoom, camera reset and Ctrl+Q closure.
+- Native frame-rate results and limitations are above; full-resolution voxel-boundary correctness is tested independently of the GUI.
 
-No native Windows execution occurred. The GitHub Actions matrix is present but was not run. Under Python 3.14, Qt imports and the offscreen timeline widget test passed; full manual 3D GUI interaction was not repeated after the runtime migration.
+No native Windows execution occurred. The unchanged dependency families had Windows x64 wheels resolved during 0.1.1. No new external dependency was introduced for metrics/charts/chunks. The included Windows/Linux GitHub Actions matrix has not been run on GitHub in this delivery.
 
-### Original native GUI validation
+### Historical validation
 
-On Linux/X11 with Python 3.12.14, a real desktop window was opened and manually exercised: rendering, start, pause, stop/rewind, speed changes, timeline click, exact-time entry, backward seeking, tool-change display, full-resolution display, head visibility, orbit, pan, zoom and clean Ctrl+Q shutdown.
-
-The GUI-exported final array matched the headless output. Playback did not modify the exported final file.
+The original Python 3.12 GUI checks covered rendering, controls, tool-change display and export matching. Python 3.14 migration 0.1.1 passed 80 tests and wheel/import checks. Their original record is preserved as `validation/history_0_1_1.json`; old timings must not be presented as new-version measurements.
 
 ### Tests and why they matter
 
@@ -579,7 +672,9 @@ The GUI-exported final array matched the headless output. Playback did not modif
 | `tests/test_gcode.py` | Modal units/offsets, local rapid F, all arc planes, full-circle helix, signed-R arcs, inverse-time feed, absolute centres, G53/G10, parser reuse, cycles, G28, G4 S, comments/block delete/M6, G49 and rejection cases. |
 | `tests/test_tools.py` | Construction of all 124 catalog entries, tool families, rounded-tip chord bound, embedded metadata overrides and invalid dimensions/types. |
 | `tests/test_engine.py` | Spindle/rapid behavior, machine bodies, fixtures, limits, true undercuts, output round-trip, checkpoints/partial replay, stock boundaries, meshes, memmap, Unicode/space paths, errors, initial overlap and strict JSON fields. |
-| `tests/test_viewer_widgets.py` | Qt timeline click and drag seeking under the offscreen platform. |
+| `tests/test_metrics.py` | 20 mm threshold, normal component vs total feed, retreat/tangency/stationary, all six directions, pockets/undercuts, volume/rate conservation, rapid-zero rate, both NPY records and mmap compatibility, legacy/corrupt input, allocation guard, zero-duration NaN and immutable exports through replay. |
+| `tests/test_chunkmesh.py` | Independent exposed-face oracle on random solids and combined packing, boundary edits, reset, no internal seams, checkerboard buffer growth without coarsening, partial-stock bounds. |
+| `tests/test_viewer_widgets.py` | Offscreen Qt timeline click/drag, metric curve values, synchronized cursors and seek signals. |
 
 The sampled-reference tests are independent approximations with boundary allowances; they are not a formal proof of the analytic kernels. Construction of 124 catalog entries proves validity under the schema, not physical correctness of every catalog dimension.
 
@@ -607,7 +702,7 @@ Expected baseline:
 
 The incomplete reasons are expected: nominal machine and example tools are unverified, and M6 return behavior is unconfirmed. Do not change the example flags just to make the demo return zero.
 
-`examples/results/demo_result.report.json` intentionally still says simulator 0.1.0: it is the original reference export. `VALIDATION.json` records the 0.1.1 migration and exact array equality.
+`examples/results/demo_result.report.json` now says **0.2.0**, schema 2. Its NPY contains the same original bool grid plus **426** metric rows (**24,282** data bytes plus the second header). Raw grid SHA-256 is unchanged. Peak rate/approach are 1,800 mm³/min and 2,400 mm/min; floating-point rate values can differ by tiny arithmetic roundoff. The previous 0.1.0 export remains recoverable from the Git baseline.
 
 For a deliberate crash, substitute `examples/collision.nc` with the same stock/tools/start options and a separate output path. The expected status is collision/exit 2; model incompleteness can remain true as well.
 
@@ -698,7 +793,12 @@ The direct API does not add the CLI's NC hash, input metadata or tolerance-repor
 - Explicit JSON overrides metadata by actual NC T number.
 - Stock origin, pitch, XYZ order and hashes stay in the output contract.
 - Simulation resolution is independent of display detail.
-- Seeking cannot overwrite the final exported NPY/report.
+- Seeking cannot overwrite the final exported NPY/report or mutate the precomputed metrics.
+- `np.load(path)` and memory mapping continue to expose the first bool XYZ array; appended metrics remain numeric with no pickle.
+- Integrated interval rates match actual removed voxel volume; rapid rate remains zero.
+- Approach uses remaining stock, explicit voxel-face normals, a 20 mm query range and stated sampling semantics.
+- Full-resolution display never silently coarsens; chunk boundaries do not create or hide exposed faces.
+- Keep benchmark rendering FPS separate from mesh-kernel milliseconds and initial/seek latency.
 - Default/sample geometry stays unverified until measured evidence justifies changing it.
 
 ## 15. Open work and continuation priorities
@@ -725,14 +825,16 @@ The catalog extraction and CAD-envelope extraction were performed during develop
 
 | Area | Concrete follow-up |
 |---|---|
-| Source control | Initialize/use a real project repository if requested; the current folder is not Git-backed. |
-| Ignore rules | `.gitignore` still lists `.venv/`, but not `.venv314/`. Add the latter before a Windows environment can be accidentally staged. |
-| Test fixtures in Git | Broad `*.npy` / `*.report.json` ignores also cover saved example results. Explicitly decide how those fixtures should be tracked. |
+| Source control | Local `main` and incremental commits now exist. Set an external remote only when authorized; preserve history when moving to another environment. |
+| Ignore rules | Both `.venv/` and `.venv314/` are ignored; research/dependency environments are outside the repository. Preserve these exclusions. |
+| Test fixtures in Git | Saved `examples/results/*.npy` and `*.report.json` are explicitly unignored and tracked. Keep general job results out of commits unless intentionally added. |
 | Reproducible installs | Consider a tested constraints/lock file while retaining usable package metadata. Current ranges can resolve newer Qt/test dependencies. |
 | Provenance | Add repeatable catalog and CAD derivation tooling instead of relying on generated JSON plus scratch research. |
 | Parser compatibility | Build a corpus of actual Makera Studio exports and exact community-firmware variants; add narrow support with tests. |
 | Cancellation | Investigate long kernel/mesh work and blocking `worker.join()` on close for very large jobs. |
-| Memory/scale | Profile large head/body overlaps, many arc chords and dense full-resolution meshes; checkpoint packing uses transient memory. |
+| Memory/scale | Profile large cutters, dense fragmented surfaces, high speed multipliers and packed surface uploads. Full mode grows buffers rather than coarsening; OOM remains possible. Checkpoint packing adds transient memory. |
+| Metrics | Evaluate sampling density and voxel-face normals on real plunge/approach examples. If smooth-normal estimates or certified peak bounds are desired, specify/test that separate algorithm rather than relabeling this diagnostic. |
+| Seeking | Arbitrary generation/backward seeks currently rebuild all chunk surfaces (~1 s for the benchmark). Differential restoration or checkpointed meshes could improve this without losing boundary correctness. |
 | Primitive expansion | Add mesh/rotated-box fixtures only with a defined continuous-contact and tolerance strategy. |
 | Reporting | If needed, make travel-limit timestamps exact; they currently identify offending endpoints. |
 | Replay API | If replay will be exposed to external callers, separate visual-state counters from final-report counters. |
@@ -743,24 +845,23 @@ Do not expand to 4/5-axis, GPU simulation, a full machine kinematic graph or mat
 
 ## 16. Development context and recoverable references
 
-### Existing session paths
+### Existing session paths and recovery
 
-These were present when the handover was written. They are convenience paths for the current workspace, not portable install requirements and not guaranteed to persist into a different agent environment.
+The earlier scratch workspace was not available at the start of this iteration. Source and handover were recovered from their saved artifacts before Git initialization. Do not assume old research checkouts, temporary wheels or screenshots persist. The archive and repository evidence now carry the continuation context.
 
-| Path | Contents |
+| Current path | Contents |
 |---|---|
-| `/workspace/scratch/81ce3209d11c/carvera-voxel-sim` | Source tree matching the delivered ZIP |
-| `/workspace/scratch/81ce3209d11c/carvera-voxel-sim.zip` | Delivered 0.1.1 archive |
-| `/workspace/scratch/81ce3209d11c/research/venv314` | Clean Python 3.14.10 development/test environment |
-| `/workspace/scratch/81ce3209d11c/research/tests314.xml` | Full 80-test JUnit output |
-| `/workspace/scratch/81ce3209d11c/research/demo314.npy` and `.report.json` | Installed-package migration smoke output |
-| `/workspace/scratch/81ce3209d11c/research/wheels314` | Built 0.1.1 wheel |
-| `/workspace/scratch/81ce3209d11c/research/windows314-wheels` | Downloaded Windows x64 runtime/viewer/test wheels |
-| `/workspace/scratch/81ce3209d11c/research/CarveraProfiles` | Pinned official Makera source checkout |
+| `/workspace/scratch/81ce3209d11c/carvera-voxel-sim` | Git repository, 0.2.0 source, handover, current and historical validation |
+| `/workspace/scratch/81ce3209d11c/carvera-voxel-sim.zip` | Updated deliverable including `.git` |
+| `/workspace/scratch/81ce3209d11c/CARVERA_SIM_HANDOVER.md` | Standalone copy of repository `HANDOVER.md` |
+| `/workspace/scratch/81ce3209d11c/research/venv314` | Test/development environment, CPython 3.14.10 |
+| `/workspace/scratch/81ce3209d11c/research/native-python` | Temporary Python copy for native desktop testing; not part of package |
+| `/workspace/scratch/81ce3209d11c/research/dist` | Built 0.2.0 wheel, not required to use source ZIP |
+| Repository `validation/` | Durable test, headless, native playback, mesh microbenchmark and original validation records |
 
-Older Python 3.12 GUI/import environments and research files may also be present. Use the project ZIP and current validation record to distinguish deliverables from temporary development material.
+Paths are development conveniences, not portable installation requirements. Native desktop and execution environments share the workspace but not necessarily interpreter symlink targets under `/home/agent`; this required a copied temporary interpreter for the Linux GUI test. Windows uses its ordinary `.venv314` launcher and needs no such workaround.
 
-`research/makera_db_converter.txt` is an exploratory third-party converter reference, not the simulator's shipped importer. It contains guessed dimensions and a fallback to flat end mills for unknown types. Do not adopt those defaults into the strict verification path.
+The prior handover mentioned `research/makera_db_converter.txt`, an exploratory third-party converter with guessed geometry/fallback flat mills. It is not a shipped importer and is not needed to run this project. Do not adopt those guesses into the strict path.
 
 ### Source material already consulted
 
@@ -779,4 +880,4 @@ The Makera numerical data are pinned. The unversioned documentation links can ch
 
 ## 17. Continuation brief
 
-Continue from `carvera-voxel-sim` **0.1.1**, targeting standard x64 **Python 3.14**. Preserve the full 3D bool grid, continuous frustum sweeps, collision-before-removal timing, strict NC rejection, and explicit incomplete-model reporting. The highest-value next evidence is a native Windows run and a measured Carvera Air setup. Treat the 80 passing tests as a useful baseline, the nominal CAD/catalog as unverified geometry, and the old benchmark numbers as Linux/Python 3.12 observations. Do not present the tool as a physical safety guarantee or an exhaustive Studio/firmware emulator.
+Continue from **0.2.0**, standard x64 **Python 3.14**, local branch **main**. Preserve continuous full-XYZ removal, collision-before-cut chronology, strict unsupported-NC rejection and explicit incomplete geometry. Dynamic diagnostics are sampled interval mean removal and peak voxel-face approach within 20 mm; both reside in the same NPY after the backward-compatible bool grid. Default full-resolution playback remeshes dirty chunks and batches cached surfaces into one GPU draw. The new 97-test suite, native ~31 FPS benchmark, and exact demo-grid regression are the current evidence. Native Windows acceptance and measured Carvera Air geometry remain the highest-value unfinished work. Make further changes in reviewable Git commits and keep this handover and validation facts current.

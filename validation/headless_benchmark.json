@@ -1,0 +1,20 @@
+{
+  "simulation_time_s": 2.9246368539998002,
+  "nominal_job_time_s": 1941.8005650117493,
+  "linearized_segments": 11570,
+  "removed_voxels": 17636640,
+  "collision_count": 0,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.14.10",
+  "numpy": "2.3.5",
+  "pitch_mm": 0.1,
+  "stock_mm": [
+    80.0,
+    60.0,
+    12.0
+  ],
+  "grid_bytes": 57600000,
+  "jit_warmup_s": 0.12995501600016723,
+  "parse_s": 0.1758448540003883,
+  "note": "Simulation time excludes JIT, initialization, parsing, UI and file export. Collisions enabled. Nominal CAD is unverified."
+}

@@ -30,11 +30,13 @@ Numba compiles and caches the numeric kernels on the first invocation, so that
 invocation has additional startup cost. A working OpenGL desktop driver is
 needed for the viewer.
 
-Version 0.1.1 targets Python 3.14. All 80 tests passed on Linux with Python
-3.14.10, including the timeline widget test. The installed package's viewer
-imports and dependency consistency also passed. Full interactive GUI checks
-were performed during initial development on Python 3.12.
-Windows x64 Python 3.14 dependency wheels were successfully resolved/downloaded;
+Version **0.2.0** targets Python 3.14. All **97 tests** passed on Linux with
+Python 3.14.10, including metric, meshing and Qt widget regressions. Native
+Python 3.14 desktop playback and chart/mouse controls were exercised. The
+80 × 60 × 12 mm benchmark achieved about **31 FPS at 0.1 mm display pitch**
+with 10× playback, using Mesa software OpenGL. Initial verification and full
+mesh generation are excluded from this frame-rate measurement.
+Windows x64 Python 3.14 dependency wheels were resolved/downloaded during 0.1.1;
 **a native Windows runtime was not available for execution testing**. A
 Windows/Linux, Python 3.14 GitHub Actions test matrix is included, but has
 not been run on GitHub as part of this delivery.
@@ -82,10 +84,15 @@ coordinates plus explicit stickout, not by applying an imaginary H table.
 
 ### Outputs and exit codes
 
-`result.npy`: C-contiguous `numpy.bool_`, ordered **[X, Y, Z]**. `True` means
+The first array in `result.npy` is C-contiguous `numpy.bool_`, ordered **[X, Y, Z]**. `True` means
 material remains; `False` means air. Shape is `ceil(stock_dimensions / pitch)`.
 Initial occupancy is determined by voxel centres, including partial boundary
 cells. This can quantize each stock face by up to half a voxel.
+
+A second, structured numeric array in the **same file** stores the time-resolved
+metrics. Existing `np.load("result.npy")` and `mmap_mode="r"` consumers still
+receive the bool grid. Use `load_metrics()` / `load_result()` below to read the
+appended array. No pickle or object arrays are used.
 
 `result.report.json`: origin, pitch, shape, coordinate mapping, raw array hash,
 NC hash, tool/machine configuration, warnings, removed volume, timings and
@@ -130,6 +137,64 @@ index = np.array([100, 120, 20])
 voxel_center_mm = origin + (index + 0.5) * pitch
 material_present = bool(stock[tuple(index)])
 ```
+
+## Dynamic metrics
+
+Metrics are computed during verification, saved in the NPY, and displayed in
+two linked charts above the viewer timeline. Click a chart or drag its cursor
+to pause and seek to a suspicious interval. Chart rendering preserves visible
+peaks when reducing points to screen pixels; the saved samples are unchanged.
+
+| Field | Meaning |
+|---|---|
+| `t_start_s`, `t_end_s` | Nominal interval start/end in seconds |
+| `line`, `tool` | NC line and T number |
+| `removed_mm3` | Material actually removed in this interval |
+| `removal_rate_mm3_min` | Removed voxel volume × 60 / interval seconds |
+| `approach_speed_mm_min` | Largest positive velocity component toward a remaining-stock voxel face within 20 mm of the rotating cutter envelope |
+| `rapid` | Whether this is a G0 interval |
+
+Approach is zero for tangential/retreating motion when no stock lies ahead
+along a moving axis within 20 mm. A diagonal move over a horizontal surface
+reports its downward component, not its total feed. Pockets and undercut
+ceilings use the remaining three-dimensional stock. The normal is a **voxel
+face normal**, not a fitted smooth-surface normal; staircase effects remain on
+curved/sloping surfaces. Fixtures and holder/head geometry have separate
+collision checks and are not included in this metric.
+
+Each motion is split into intervals of at most **0.1 s and 1 mm**. Approach is
+the maximum of start/mid/end probes against stock before that interval is cut;
+removal rate is the interval mean. These are diagnostic samples, not a bounded
+continuous peak detector. An interval crossing the 20 mm threshold can carry
+a nonzero peak even though its start was farther away. Use smaller sampling
+limits when inspecting a short transient:
+
+```powershell
+.\.venv314\Scripts\python.exe -m carvera_sim job.nc --stock 50 50 5 --tools my_tools.json --start 0 0 10 -o result.npy --metrics-period 0.02 --metrics-distance 0.2 --visualize
+```
+
+The default `--max-metric-samples` guard is 2,000,000 (57 bytes per row).
+Zero-duration material removal retains `removed_mm3` and has a `NaN` rate;
+the JSON counts these undefined samples. A rapid never excavates material.
+The rates use programmed constant segment velocity, without acceleration,
+backlash, deflection or material-force simulation. They expose potentially
+hazardous commands; no material-specific danger threshold is inferred.
+
+```python
+from carvera_sim.engine import load_result, load_metrics
+
+stock, metrics = load_result("result.npy")  # stock is memory-mapped by default
+rate = metrics["removal_rate_mm3_min"]
+approach = metrics["approach_speed_mm_min"]
+times = metrics["t_start_s"]
+# Or load only metrics without reading the voxel payload:
+metrics = load_metrics("result.npy")
+```
+
+Without this package, open the file once and call `np.load(stream,
+allow_pickle=False)` twice: first stock, then metrics. `load_metrics()` returns
+an empty typed table for legacy stock-only files. The schema-v2 JSON report
+documents sampling, units, peaks, array offset and separate raw-array hashes.
 
 ## Tools
 
@@ -295,18 +360,29 @@ those files are saved, playback becomes available:
 
 - Start, pause, stop/rewind, 0.1×–250× speed.
 - Click/drag timeline or enter an exact nominal time; seek in either direction.
+- Excavation and approach charts with synchronized cursors and click/drag seeking.
 - Collision list entries seek to the first recorded contact.
 - Left drag rotates; right/middle drag or Shift+left drag pans; wheel zooms.
 - Space toggles play/pause, Home stops/rewinds, Ctrl+Q closes.
 - Show/hide head geometry and toolpath; reset camera; select display detail.
 
 Seeking restores compressed checkpoints and replays the missing path portion.
-The saved final result is immutable during playback. The display may use a
-coarser **max-pooled** mesh to remain interactive; its pitch is shown in the
-status line. Small holes can disappear from that preview. Full-resolution
-display is selectable; pathological meshes are coarsened at the face-count
-guard, with the actual display pitch still shown. **The simulated/output grid
-always keeps the requested pitch.**
+The saved final result and metric history are immutable during playback.
+**Full resolution is now the default and never silently coarsens.** Only
+64³-voxel chunks touched by actual removal, plus neighbouring boundary cells,
+are remeshed. Cached surfaces are packed into one OpenGL draw. This preserves
+all exposed voxel faces, including undercuts, without rescanning the full
+stock at every playback frame. Optional 2×/4× previews still use max-pooling
+and can hide small holes; the actual display pitch is shown.
+
+Initial meshing and arbitrary seeks can still take about a second on the
+57.6-million-voxel benchmark. Very fragmented surfaces, large cutters, high
+speed multipliers and GPU/driver differences can lower frame rate. Reproduce
+the native playback measurement (with head and path visible) using:
+
+```powershell
+.\.venv314\Scripts\python.exe scripts/benchmark_playback.py --seconds 10 --speed 10 --output playback.json
+```
 
 ## Supported NC and deliberate errors
 
@@ -365,8 +441,8 @@ Measured on this development host, with collision checking enabled:
 
 | Job | Grid | Segments | Simulation kernel/dispatch time |
 |---|---|---:|---:|
-| Included synthetic 80 × 60 × 12 mm raster | 57,600,000 voxels | 11,570 | 1.39 s |
-| Makera TopClamp example, 100 × 100 × 5 mm stock | 50,000,000 voxels | 9,634 | 1.17 s |
+| Included synthetic 80 × 60 × 12 mm raster, 0.2.0 / Python 3.14, metrics enabled | 57,600,000 voxels | 11,570 | 2.92 s |
+| Makera TopClamp example, historical 0.1.0 / Python 3.12, no metrics | 50,000,000 voxels | 9,634 | 1.17 s |
 
 These are host-specific observations, not Windows performance promises. They
 exclude initialization, parsing, JIT/cache loading, mesh generation and export.
@@ -414,6 +490,11 @@ all catalog entries, all tool families, arc planes/helices, units/offsets,
 spindle/rapid behavior, rejection paths, rewind determinism, memmap round-trips,
 Unicode/space-safe path handling and timeline clicks. `VALIDATION.json` records
 the actual execution environment and results for this delivery.
+
+The source ZIP includes the local Git repository and incremental commits.
+Run `git log --oneline` for change boundaries. `HANDOVER.md` documents the
+architecture, metric definitions, output compatibility and continuation work;
+`validation/` contains this release's test and performance evidence.
 
 ## Sources
 

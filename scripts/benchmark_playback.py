@@ -61,7 +61,8 @@ def main():
         if args.quit_after:window.close()
 
     def begin():
-        state['export_hash']=hashlib.file_digest((directory/'result.npy').open('rb'),'sha256').hexdigest()
+        with (directory/'result.npy').open('rb') as stream:
+            state['export_hash']=hashlib.file_digest(stream,'sha256').hexdigest()
         state['start']=time.perf_counter();state['recording']=True
         i=window.speed.findData(args.speed)
         if i<0:window.speed.addItem(f'{args.speed:g}×',args.speed);i=window.speed.count()-1

@@ -1,0 +1,25 @@
+{
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.14.10",
+  "grid_shape": [
+    800,
+    600,
+    120
+  ],
+  "opengl": {
+    "vendor": "Mesa",
+    "renderer": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "version": "4.5 (Compatibility Profile) Mesa 25.0.7-2+deb13u1"
+  },
+  "pitch_mm": 0.1,
+  "display_stride": 1,
+  "speed": 10,
+  "elapsed_s": 9.804608759000075,
+  "playback_frames": 306,
+  "playback_updates_per_second": 31.209812397573675,
+  "viewport_swaps_per_second": 31.209812397573675,
+  "compute_median_ms": 10.286256499512092,
+  "compute_p95_ms": 24.05012624990377,
+  "last_nominal_time_s": 97.66902491999645,
+  "note": "Native Qt/OpenGL window, full voxel detail; excludes initial verification, JIT and initial full mesh"
+}

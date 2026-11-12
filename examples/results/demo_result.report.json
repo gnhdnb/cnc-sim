@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "simulator_version": "0.1.0",
+  "schema_version": 2,
+  "simulator_version": "0.2.0",
   "status": "incomplete",
   "exit_code": 3,
   "verification_complete": false,
@@ -47,7 +47,7 @@
   "remaining_voxels": 2978344,
   "removed_volume_mm3": 621.6560000000002,
   "nominal_job_time_s": 35.194261926242916,
-  "simulation_time_s": 0.027021227999739494,
+  "simulation_time_s": 0.047933638999893446,
   "linearized_segments": 88,
   "collision_margin_mm": 0.0,
   "collision_count": 0,
@@ -169,6 +169,58 @@
     "Motion is nominal; no deflection, runout, backlash, acceleration, corner blending or material forces",
     "After a reported collision, removal continues as a hypothetical rigid-tool path"
   ],
+  "metrics": {
+    "schema_version": 1,
+    "npy_array_index": 1,
+    "samples": 426,
+    "fields": [
+      [
+        "t_start_s",
+        "<f8"
+      ],
+      [
+        "t_end_s",
+        "<f8"
+      ],
+      [
+        "line",
+        "<i8"
+      ],
+      [
+        "tool",
+        "<i8"
+      ],
+      [
+        "removed_mm3",
+        "<f8"
+      ],
+      [
+        "removal_rate_mm3_min",
+        "<f8"
+      ],
+      [
+        "approach_speed_mm_min",
+        "<f8"
+      ],
+      [
+        "rapid",
+        "|b1"
+      ]
+    ],
+    "sample_period_max_s": 0.1,
+    "sample_travel_max_mm": 1.0,
+    "approach_range_mm": 20.0,
+    "removal_definition": "Actual removed voxel volume divided by each interval duration, multiplied by 60; interval mean, mm^3/min",
+    "approach_definition": "Maximum positive velocity component toward a voxel face within 20 mm of the rotating cutter envelope; centre-sampled transverse projection and half-cell axial face correction; maximum of interval start/mid/end probes against stock before that interval is cut",
+    "approach_scope": "Remaining stock only, cutter envelope only; excludes fixtures and holder/head (checked separately for collisions); voxel-face normals, not fitted smooth-surface normals",
+    "sampling_note": "Diagnostic samples, not an exact continuous peak bound; short transients can require smaller sample period/travel",
+    "zero_duration_note": "A zero-duration interval that removes material has NaN rate; removed_mm3 is retained",
+    "max_removal_rate_mm3_min": 1800.0000000000389,
+    "max_approach_speed_mm_min": 2400.0,
+    "undefined_rate_samples": 0,
+    "npy_header_offset_bytes": 3600128,
+    "raw_array_sha256": "42dcabc18d494860266b963ce03e0ce15c9a43ac38a8c591a78c5ba39cb3e97f"
+  },
   "input": {
     "nc_file": "demo.nc",
     "nc_sha256": "c02c64dc80dbe709948e600ce28e8e48996a35ff2dc87fb25a6f23bead900df4",
@@ -184,5 +236,5 @@
   "arc_chord_tolerance_mm": 0.005,
   "profile_chord_tolerance_mm": 0.005,
   "voxel_center_to_corner_mm": 0.08660254037844387,
-  "jit_warmup_s": 1.4126251379998394
+  "jit_warmup_s": 0.10750505400028487
 }
