@@ -31,6 +31,9 @@ def argument_parser():
     p.add_argument("--arc-tolerance",type=float,default=None,help="Arc chord error in mm; default pitch/20")
     p.add_argument("--profile-tolerance",type=float,default=None,help="Curved tool profile chord error in mm; default pitch/20")
     p.add_argument("--collision-margin",type=float,default=0.,help="Inflate collision envelopes by this many mm; may create conservative false positives")
+    p.add_argument("--metrics-period",type=float,default=.1,help="Maximum dynamic-metric interval, seconds")
+    p.add_argument("--metrics-distance",type=float,default=1.,help="Maximum travel per dynamic-metric interval, mm")
+    p.add_argument("--max-metric-samples",type=int,default=2_000_000,help="Time-series allocation guard")
     p.add_argument("-o","--output",type=Path,default=Path("result.npy"),help="Final stock file; existing output is replaced after successful simulation")
     p.add_argument("--visualize",action="store_true",help="Open the optional Qt/OpenGL playback window")
     p.add_argument("--memmap",action="store_true",help="Use a temporary disk-backed working grid instead of a RAM allocation")
@@ -95,7 +98,9 @@ def main(argv=None):
             working=tempfile.TemporaryDirectory(prefix="carvera-voxel-")
             grid=np.lib.format.open_memmap(Path(working.name)/"working.npy",mode="w+",dtype=np.bool_,shape=stock.shape)
         sim=Simulator(stock,tools,machine,grid=grid,margin=args.collision_margin,
-                      start_verified=args.start is not None,warnings=warnings)
+                      start_verified=args.start is not None,warnings=warnings,
+                      metrics_period=args.metrics_period,metrics_distance=args.metrics_distance,
+                      max_metric_samples=args.max_metric_samples)
         if args.visualize:
             try:from .viewer import launch
             except ImportError as exc:raise ValueError('Viewer dependencies missing. Run: python -m pip install ".[viewer]"') from exc

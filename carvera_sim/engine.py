@@ -15,6 +15,12 @@ from .gcode import Program, Move
 from .tools import Body, Tool, make_body, EMPTY_FRUSTA
 from .kernels import (remove_sweep, collide_frusta, collide_boxes,
                       frustum_fixture_hit, box_fixture_hit)
+from .metrics import METRIC_DTYPE, normal_approach, sample_count, metric_summary
+
+
+class SimulationReport(dict):
+    """JSON-compatible summary with the numeric time series attached in memory."""
+    metrics = None
 
 
 @dataclass
@@ -123,7 +129,8 @@ def expanded_body(body, margin):
 
 class Simulator:
     def __init__(self, stock: Stock, tools: dict[int, Tool], machine: Machine | None = None,
-                 grid=None, margin=0., start_verified=True, warnings=None):
+                 grid=None, margin=0., start_verified=True, warnings=None,
+                 metrics_period=.1, metrics_distance=1., max_metric_samples=2_000_000):
         if not math.isfinite(margin) or margin < 0:
             raise ValueError("Collision margin must be finite and nonnegative")
         self.stock, self.tools = stock, tools
@@ -134,6 +141,12 @@ class Simulator:
         self.margin = margin
         self.start_verified = start_verified
         self.warnings = list(warnings or [])
+        if not all(math.isfinite(v) and v>0 for v in (metrics_period,metrics_distance)):
+            raise ValueError("Metric sample period and travel must be positive and finite")
+        if max_metric_samples<1:
+            raise ValueError("max_metric_samples must be positive")
+        self.metrics_period,self.metrics_distance=metrics_period,metrics_distance
+        self.max_metric_samples=int(max_metric_samples)
         self.bodies = {n:[expanded_body(b,margin) for b in self.machine.bodies(t)] for n,t in tools.items()}
         self.cutter_bodies = {n:expanded_body(Body("cutter",t.cutting,role="cutter"),margin) for n,t in tools.items()}
         self.reset()
@@ -144,6 +157,7 @@ class Simulator:
         self.collisions = []
         self._events = {}
         self._previous_tool = None
+        self.metrics=np.empty(0,dtype=METRIC_DTYPE)
 
     def _event(self, move, body, target, hit, point=None, reason="collision"):
         if not 0 <= hit <= 1:
@@ -208,21 +222,49 @@ class Simulator:
                         self._event(move,"tip" if offset[2]==0 else "gauge","travel_limits",fraction,reason="travel_limit")
             if move.rpm > self.machine.config.get("max_rpm", math.inf):
                 self._event(move,"spindle","rpm_limit",0.,reason="spindle_speed_limit")
+        removed=0
         if cutting:
-            self.removed += int(remove_sweep(self.grid,self.stock.origin,self.stock.pitch,cutters,move.start,move.end))
+            removed=int(remove_sweep(self.grid,self.stock.origin,self.stock.pitch,cutters,move.start,move.end))
+            self.removed += removed
         self._previous_tool=move.tool
+        return removed
 
     def run(self, program: Program, progress=None, snapshots=None, cancelled=None):
         self.reset()
         missing_tools={m.tool for m in program.moves}-set(self.tools)
         if missing_tools:
             raise ValueError(f"Missing tool definitions: {sorted(missing_tools)}")
+        counts=[sample_count(m,self.metrics_period,self.metrics_distance) for m in program.moves]
+        total=sum(counts)
+        if total>self.max_metric_samples:
+            raise ValueError(f"Metrics need {total:,} samples; exceeds max_metric_samples {self.max_metric_samples:,}")
+        self.metrics=np.empty(total,dtype=METRIC_DTYPE)
+        sample=0
         start=time.perf_counter()
         last_update=start
         if snapshots is not None:snapshots.add(0,self.grid,force=True)
         for i,move in enumerate(program.moves):
             if cancelled and cancelled():raise InterruptedError("Simulation cancelled")
-            self.apply(move)
+            count=counts[i]
+            dt=move.t1-move.t0
+            delta=move.end-move.start
+            velocity=delta*(60/dt) if dt>0 else np.zeros(3)
+            for j in range(count):
+                if cancelled and cancelled():raise InterruptedError("Simulation cancelled")
+                lo,hi=j/count,(j+1)/count
+                part=Move(move.start+lo*delta,move.start+hi*delta,move.tool,move.spindle,
+                          move.rpm,move.rapid,move.line,move.t0+lo*dt,move.t0+hi*dt,move.kind)
+                rows=self.tools[move.tool].cutting
+                approach=0.
+                if dt>0 and np.any(delta):
+                    for point in (part.start,(part.start+part.end)/2,part.end):
+                        approach=max(approach,float(normal_approach(self.grid,self.stock.origin,
+                                     self.stock.pitch,rows,point,velocity)))
+                removed=self.apply(part)*self.stock.pitch**3
+                duration=part.t1-part.t0
+                rate=removed*60/duration if duration>0 else (math.nan if removed else 0.)
+                self.metrics[sample]=(part.t0,part.t1,move.line,move.tool,removed,rate,approach,move.rapid)
+                sample+=1
             if snapshots is not None:snapshots.add(i+1,self.grid)
             now=time.perf_counter()
             if progress and (now-last_update > .15 or i==len(program.moves)-1):
@@ -246,7 +288,7 @@ class Simulator:
         status="collisions" if self.collisions else ("incomplete" if missing else "clear_in_model")
         exit_code=2 if self.collisions else (3 if missing else 0)
         initial=math.prod(sum((np.arange(n)+.5)*self.stock.pitch <= dim+1e-10) for n,dim in zip(self.stock.shape,self.stock.dimensions))
-        return {"schema_version":1,"simulator_version":__version__,"status":status,"exit_code":exit_code,
+        result=SimulationReport({"schema_version":2,"simulator_version":__version__,"status":status,"exit_code":exit_code,
                 "verification_complete":not missing,"incomplete_reasons":missing,
                 "scope":"Programmed 3-axis machining path; hidden ATC/probe/homing/service motion and cutting physics excluded",
                 "array":{"dtype":"bool","axis_order":"XYZ","true":"material remaining","false":"air",
@@ -264,7 +306,10 @@ class Simulator:
                 "limits":["100 um is voxel pitch, not a physical machining-accuracy guarantee",
                           "Sub-voxel features and clearances may be unresolved; set a finer pitch or collision margin",
                           "Motion is nominal; no deflection, runout, backlash, acceleration, corner blending or material forces",
-                          "After a reported collision, removal continues as a hypothetical rigid-tool path"]}
+                          "After a reported collision, removal continues as a hypothetical rigid-tool path"]})
+        result['metrics']=metric_summary(self.metrics,self.metrics_period,self.metrics_distance)
+        result.metrics=self.metrics
+        return result
 
 
 class SnapshotCache:
@@ -302,8 +347,15 @@ class SnapshotCache:
         return k
 
 
-def save_result(path, grid, report):
-    """Atomic .npy + JSON writes; chunked so a memmap is never copied into RAM."""
+def save_result(path, grid, report, metrics=None):
+    """Two numeric NPY arrays in one file: legacy-compatible stock, then metrics."""
+    if metrics is None:metrics=getattr(report,'metrics',None)
+    if metrics is None:
+        if report.get('metrics',{}).get('samples',0):
+            raise ValueError("Pass metrics explicitly when saving a plain copied report")
+        metrics=np.empty(0,dtype=METRIC_DTYPE)
+    if not isinstance(metrics,np.ndarray) or metrics.dtype!=METRIC_DTYPE or metrics.ndim!=1:
+        raise ValueError("metrics must be a one-dimensional METRIC_DTYPE array")
     path=Path(path).resolve()
     if path.suffix.lower()!=".npy":raise ValueError("Output filename must end in .npy")
     path.parent.mkdir(parents=True,exist_ok=True)
@@ -321,11 +373,16 @@ def save_result(path, grid, report):
         del dst
         out._mmap.close()
         del out
+        with open(tmp,'ab') as stream:
+            metrics_offset=stream.tell()
+            np.save(stream,metrics,allow_pickle=False)
         os.replace(tmp,path)
     finally:
         if os.path.exists(tmp):os.unlink(tmp)
     report=dict(report)
     report["array"]=dict(report["array"],file=path.name,raw_array_sha256=digest.hexdigest())
+    report['metrics']=dict(report.get('metrics',{}),npy_array_index=1,npy_header_offset_bytes=metrics_offset,
+                           samples=len(metrics),raw_array_sha256=hashlib.sha256(metrics.tobytes()).hexdigest())
     report_path=path.with_suffix(".report.json")
     fd,tmp=tempfile.mkstemp(prefix=path.stem+"-",suffix=".json",dir=path.parent)
     try:
@@ -334,6 +391,32 @@ def save_result(path, grid, report):
     finally:
         if os.path.exists(tmp):os.unlink(tmp)
     return report,path,report_path
+
+
+def load_metrics(path):
+    """Read appended metrics without loading the stock; legacy NPY -> empty table."""
+    with open(path,'rb') as stream:
+        version=np.lib.format.read_magic(stream)
+        reader={ (1,0):np.lib.format.read_array_header_1_0,
+                 (2,0):np.lib.format.read_array_header_2_0 }.get(version)
+        if reader is None:raise ValueError(f"Unsupported first NPY header version {version}")
+        shape,order,dtype=reader(stream)
+        if dtype!=np.bool_ or order or len(shape)!=3:
+            raise ValueError("First array must be a C-contiguous XYZ bool stock")
+        end=stream.tell()+math.prod(shape)*dtype.itemsize
+        size=os.fstat(stream.fileno()).st_size
+        if end>size:raise ValueError("Truncated stock array")
+        if end==size:return np.empty(0,dtype=METRIC_DTYPE)
+        stream.seek(end)
+        metrics=np.load(stream,allow_pickle=False)
+        if metrics.dtype!=METRIC_DTYPE or metrics.ndim!=1:
+            raise ValueError("Unexpected appended metric schema")
+        return metrics
+
+
+def load_result(path,mmap_mode='r'):
+    """Return (XYZ stock, structured time-series metrics), with no pickle loading."""
+    return np.load(path,mmap_mode=mmap_mode,allow_pickle=False),load_metrics(path)
 
 
 def warmup():
@@ -347,3 +430,4 @@ def warmup():
     collide_boxes(grid,origin,.1,boxes,rows,a,b)
     frustum_fixture_hit(rows[0],boxes[0],a,b)
     box_fixture_hit(boxes[0],boxes[0],a,b)
+    normal_approach(grid,origin,.1,rows,a,np.array([0.,0.,-100.]))
